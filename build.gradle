@@ -1,0 +1,40 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'DB2025Team04'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // MySQL JDBC Driver
+    implementation 'mysql:mysql-connector-java:8.0.33'
+
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+application {
+    // 메인 클래스 설정
+    mainClass = 'DB2025Team04.Main'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+java {
+    toolchain {
+        // Java 23 사용
+        languageVersion = JavaLanguageVersion.of(23)
+    }
+}
+
+// 인코딩 설정
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}

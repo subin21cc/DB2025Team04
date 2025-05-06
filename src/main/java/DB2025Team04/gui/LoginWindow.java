@@ -1,0 +1,120 @@
+package DB2025Team04.gui;
+
+import DB2025Team04.db.DatabaseManager;
+
+import javax.swing.*;
+import java.awt.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+public class LoginWindow extends JFrame {
+    private JTextField idField;
+    private JPasswordField passwordField;
+    private JComboBox<String> userTypeCombo;
+    
+    public LoginWindow() {
+        setTitle("로그인");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(300, 200);
+        setLocationRelativeTo(null);
+        
+        // 메인 패널
+        JPanel mainPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        
+        // 사용자 타입 선택
+        userTypeCombo = new JComboBox<>(new String[]{"일반 사용자", "관리자"});
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        mainPanel.add(userTypeCombo, gbc);
+        
+        // ID 라벨과 필드
+        gbc.gridwidth = 1;
+        gbc.gridy = 1;
+        mainPanel.add(new JLabel("아이디:"), gbc);
+        
+        idField = new JTextField(15);
+        gbc.gridx = 1;
+        mainPanel.add(idField, gbc);
+        
+        // 비밀번호 라벨과 필드
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        mainPanel.add(new JLabel("비밀번호:"), gbc);
+        
+        passwordField = new JPasswordField(15);
+        gbc.gridx = 1;
+        mainPanel.add(passwordField, gbc);
+        
+        // 로그인 버튼
+        JButton loginButton = new JButton("로그인");
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 2;
+        mainPanel.add(loginButton, gbc);
+        
+        // 로그인 버튼 이벤트
+        loginButton.addActionListener(e -> {
+            String userType = (String) userTypeCombo.getSelectedItem();
+            String id = idField.getText();
+            String password = new String(passwordField.getPassword());
+            
+            // TODO: 여기에 로그인 검증 로직 추가
+            if (validateLogin(id, password, userType)) {
+                dispose(); // 로그인 창 닫기
+                new MainWindow().setVisible(true); // 메인 창 열기
+            } else {
+                JOptionPane.showMessageDialog(this,
+                    "로그인 실패: 아이디나 비밀번호를 확인해주세요.",
+                    "오류",
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        
+        add(mainPanel);
+    }
+    
+    private boolean validateLogin(String id, String password, String userType) {
+        // TODO: 실제 데이터베이스 검증 로직 구현
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = DatabaseManager.getInstance().getConnection();
+            String sql = "SELECT * FROM DB2025_USER WHERE user_id = ? AND user_pw = sha2(?, 256)";
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, id);
+            stmt.setString(2, password);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                // 로그인 성공
+                return true;
+            } else {
+                // 로그인 실패
+                return false;
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this,
+                "데이터베이스 연결 오류: " + e.getMessage(),
+                "오류",
+                JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        // 임시로 항상 true 반환
+//        return true;
+    }
+}
