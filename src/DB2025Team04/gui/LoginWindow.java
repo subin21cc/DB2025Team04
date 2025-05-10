@@ -1,6 +1,7 @@
 package DB2025Team04.gui;
 
 import DB2025Team04.db.DatabaseManager;
+import DB2025Team04.util.SessionManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -65,6 +66,14 @@ public class LoginWindow extends JFrame {
             
             // TODO: 여기에 로그인 검증 로직 추가
             if (validateLogin(id, password, userType)) {
+                int userId;
+                try {
+                    userId = Integer.parseInt(id);
+                } catch (NumberFormatException ex) {
+                    userId = 0;
+                }
+
+                SessionManager.getInstance().setUserId(userId, false);
                 dispose(); // 로그인 창 닫기
                 new MainWindow().setVisible(true); // 메인 창 열기
             } else {
@@ -96,7 +105,8 @@ public class LoginWindow extends JFrame {
                 return true;
             } else {
                 // 로그인 실패
-                return false;
+                // TODO: 테스트를 위해서 임시로 true 반환
+                return true;
             }
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this,
