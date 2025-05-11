@@ -6,6 +6,7 @@ import java.awt.*;
 public class MainWindow extends JFrame {
     private JTabbedPane tabbedPane;
     private ItemListPanel itemListPanel;
+    private MyRentStatusPanel myRentStatusPanel;
 
     public MainWindow() {
         setTitle("이화 물품 대여 서비스");
@@ -20,9 +21,10 @@ public class MainWindow extends JFrame {
         tabbedPane = new JTabbedPane();
 
         itemListPanel = new ItemListPanel();
+        myRentStatusPanel = new MyRentStatusPanel();
 
         tabbedPane.addTab("대여 물품 목록", new ImageIcon(), itemListPanel, "대여 물품을 보여줍니다");
-        tabbedPane.addTab("내 대여 현황", new ImageIcon(), new ItemListPanel(), "내가 대여한 물품 및 현황을 보여줍니다");
+        tabbedPane.addTab("내 대여 현황", new ImageIcon(), myRentStatusPanel, "내가 대여한 물품 및 현황을 보여줍니다");
         tabbedPane.addTab("내 연체 현황", new ImageIcon(), new ItemListPanel(), "내가 연체한 물품 및 현황을 보여줍니다");
 
         add(tabbedPane, BorderLayout.CENTER);
