@@ -78,7 +78,7 @@ public class ItemListPanel extends JPanel {
                 tableModel.addRow(row);
             }
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error loading movies: " + e.getMessage(),
+            JOptionPane.showMessageDialog(this, "Error loading item list: " + e.getMessage(),
                     "Database Error", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         } finally {
