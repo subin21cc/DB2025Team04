@@ -50,6 +50,10 @@ public class LoginWindow extends JFrame {
         passwordField = new JPasswordField(15);
         gbc.gridx = 1;
         mainPanel.add(passwordField, gbc);
+
+        // test를 위해서 id, password를 미리 설정
+        idField.setText("2025001");
+        passwordField.setText("pw1234");
         
         // 로그인 버튼
         JButton loginButton = new JButton("로그인");
@@ -57,7 +61,10 @@ public class LoginWindow extends JFrame {
         gbc.gridy = 3;
         gbc.gridwidth = 2;
         mainPanel.add(loginButton, gbc);
-        
+
+        // 로그인 버튼을 기본 버튼으로 설정
+        getRootPane().setDefaultButton(loginButton);
+
         // 로그인 버튼 이벤트
         loginButton.addActionListener(e -> {
             String userType = (String) userTypeCombo.getSelectedItem();
@@ -105,8 +112,7 @@ public class LoginWindow extends JFrame {
                 return true;
             } else {
                 // 로그인 실패
-                // TODO: 테스트를 위해서 임시로 true 반환
-                return true;
+                return false;
             }
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this,
