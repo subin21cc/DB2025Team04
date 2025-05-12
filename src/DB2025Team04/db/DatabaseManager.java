@@ -78,4 +78,64 @@ public class DatabaseManager {
         } finally {
             closeResources(conn, stmt, null);
         }
-    }}
+    }
+
+    // 대여처리
+    public boolean processRental(int itemId, int userId) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false); // 트랜잭션 시작
+
+            // 1. 물품 수량 감소
+            String sql = "UPDATE DB2025_ITEMS SET available_quantity = available_quantity - 1 " +
+                    "WHERE item_id = ? AND available_quantity > 0";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, itemId);
+            int rowsAffected = stmt.executeUpdate();
+
+            if (rowsAffected > 0) {
+                // 2. 대여 기록 추가
+                sql = "INSERT INTO DB2025_RENT (item_id, user_id, borrow_date) VALUES (?, ?, NOW())";
+                stmt = conn.prepareStatement(sql);
+                stmt.setInt(1, itemId);
+                stmt.setInt(2, userId);
+                stmt.executeUpdate();
+
+                conn.commit(); // 모든 작업 성공 시 커밋
+                return true;
+            } else {
+                conn.rollback(); // 수량 감소 실패 시 롤백
+                return false; // 아이템이 없거나 대여 불가능한 경우
+            }
+        } catch (SQLException e) {
+            try {
+                if (conn != null) {
+                    conn.rollback(); // 예외 발생 시 롤백
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true); // 자동 커밋 모드 복원
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+}
