@@ -67,12 +67,12 @@ public class LoginWindow extends JFrame {
 
         // 로그인 버튼 이벤트
         loginButton.addActionListener(e -> {
-            String userType = (String) userTypeCombo.getSelectedItem();
+            int userTypeIndex = userTypeCombo.getSelectedIndex(); // 0: 일반 사용자, 1: 관리자
             String id = idField.getText();
             String password = new String(passwordField.getPassword());
             
             // TODO: 여기에 로그인 검증 로직 추가
-            if (validateLogin(id, password, userType)) {
+            if (validateLogin(id, password, userTypeIndex)) {
                 int userId;
                 try {
                     userId = Integer.parseInt(id);
@@ -80,7 +80,7 @@ public class LoginWindow extends JFrame {
                     userId = 0;
                 }
 
-                SessionManager.getInstance().setUserId(userId, false);
+                SessionManager.getInstance().setUserId(userId, userTypeIndex == 1);
                 dispose(); // 로그인 창 닫기
                 new MainWindow().setVisible(true); // 메인 창 열기
             } else {
@@ -94,7 +94,7 @@ public class LoginWindow extends JFrame {
         add(mainPanel);
     }
     
-    private boolean validateLogin(String id, String password, String userType) {
+    private boolean validateLogin(String id, String password, int userTypeIndex) {
         // TODO: 실제 데이터베이스 검증 로직 구현
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -108,7 +108,24 @@ public class LoginWindow extends JFrame {
             stmt.setString(2, password);
             rs = stmt.executeQuery();
             if (rs.next()) {
-                // 로그인 성공
+                // 패스워드 확인 성공
+                if (userTypeIndex == 1) {
+                    // 관리자 로그인 확인
+                    sql = "SELECT * FROM DB2025_ADMIN WHERE user_id = ?";
+                    stmt = conn.prepareStatement(sql);
+                    stmt.setString(1, id);
+                    rs = stmt.executeQuery();
+                    if (rs.next()) {
+                        // 관리자 로그인 성공
+                    } else {
+                        // 관리자 로그인 실패
+                        JOptionPane.showMessageDialog(this,
+                            "관리자 권한이 필요합니다.",
+                            "오류",
+                            JOptionPane.ERROR_MESSAGE);
+                        return false;
+                    }
+                }
                 return true;
             } else {
                 // 로그인 실패
