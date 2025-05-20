@@ -1,6 +1,18 @@
 -- 데이터베이스 사용 선언
 USE DB2025Team04;
 
+-- 기존 뷰 삭제
+DROP VIEW IF EXISTS VIEW_RESERVATION_STATUS;
+DROP VIEW IF EXISTS VIEW_RENT_DETAIL;
+
+-- 기존 테이블 삭제 (외래 키 참조 순서를 고려하여 삭제)
+DROP TABLE IF EXISTS DB2025_OVERDUES;
+DROP TABLE IF EXISTS DB2025_RESERVATION;
+DROP TABLE IF EXISTS DB2025_RENT;
+DROP TABLE IF EXISTS DB2025_ADMIN;
+DROP TABLE IF EXISTS DB2025_ITEMS;
+DROP TABLE IF EXISTS DB2025_USER;
+
 -- 테이블 생성
 -- 사용자 테이블
 CREATE TABLE DB2025_USER
@@ -43,7 +55,7 @@ CREATE TABLE DB2025_RENT
     borrow_date DATE                     NOT NULL DEFAULT (CURRENT_DATE),
     due_date    DATE GENERATED ALWAYS AS (borrow_date + INTERVAL 7 DAY) STORED,
     return_date DATE,
-    rent_status ENUM ('대여중','반납완료','연체') NOT NULL DEFAULT '대여중',
+    rent_status ENUM ('대여신청','대여중','반납완료','연체중', '연체완료') NOT NULL DEFAULT '대여신청',
     FOREIGN KEY (item_id) REFERENCES DB2025_ITEMS (item_id) ON DELETE RESTRICT,
     FOREIGN KEY (user_id) REFERENCES DB2025_USER (user_id) ON DELETE RESTRICT,
     UNIQUE (item_id, user_id)
@@ -149,7 +161,7 @@ VALUES (2001, '노트북', 10, 7, '전자기기'),
 INSERT INTO DB2025_RENT (rent_id, item_id, user_id, borrow_date, return_date, rent_status)
 VALUES (1, 2001, 2025001, '2025-05-01', NULL, '대여중'),
        (2, 2002, 2025002, '2025-04-25', '2025-05-02', '반납완료'),
-       (3, 2004, 2025003, '2025-04-20', NULL, '연체');
+       (3, 2004, 2025003, '2025-04-20', NULL, '연체중');
 
 -- 예약 샘플 데이터 with auto increment starting from 1
 INSERT INTO DB2025_RESERVATION (reservation_id, user_id, item_id, reserve_date, restriction_end)
