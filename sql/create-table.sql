@@ -57,8 +57,7 @@ CREATE TABLE DB2025_RENT
     return_date DATE,
     rent_status ENUM ('대여신청','대여중','반납완료','연체중', '연체완료') NOT NULL DEFAULT '대여신청',
     FOREIGN KEY (item_id) REFERENCES DB2025_ITEMS (item_id) ON DELETE RESTRICT,
-    FOREIGN KEY (user_id) REFERENCES DB2025_USER (user_id) ON DELETE RESTRICT,
-    UNIQUE (item_id, user_id)
+    FOREIGN KEY (user_id) REFERENCES DB2025_USER (user_id) ON DELETE RESTRICT
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
