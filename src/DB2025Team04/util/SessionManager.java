@@ -4,6 +4,7 @@ public class SessionManager {
     private static SessionManager instance;
     private int userId;
     private boolean isAdmin;
+    private String userName;
 
     private SessionManager() {
         // private 생성자로 외부에서 인스턴스 생성 방지
@@ -32,5 +33,13 @@ public class SessionManager {
     public void clearSession() {
         this.userId = 0;
         this.isAdmin = false;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 }

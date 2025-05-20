@@ -109,6 +109,8 @@ public class LoginWindow extends JFrame {
             rs = stmt.executeQuery();
             if (rs.next()) {
                 // 패스워드 확인 성공
+                String userName = rs.getString("user_name");
+                SessionManager.getInstance().setUserName(userName);
                 if (userTypeIndex == 1) {
                     // 관리자 로그인 확인
                     sql = "SELECT * FROM DB2025_ADMIN WHERE user_id = ?";

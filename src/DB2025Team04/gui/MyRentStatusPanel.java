@@ -20,7 +20,7 @@ public class MyRentStatusPanel extends JPanel {
     public MyRentStatusPanel() {
         setLayout(new BorderLayout());
         initComponents();
-        loadMyRentStatus();
+//        loadMyRentStatus();
     }
 
     private void initComponents() {
@@ -50,7 +50,7 @@ public class MyRentStatusPanel extends JPanel {
 
     }
 
-    private void loadMyRentStatus() {
+    public void loadItemList() {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
