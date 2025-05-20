@@ -82,7 +82,7 @@ public class ItemListPanel extends JPanel {
                     JOptionPane.showMessageDialog(this, "대여가 완료되었습니다.");
                     loadItemList(); // Refresh the item list
                 } else {
-                    JOptionPane.showMessageDialog(this, "대여 처리 중 오류가 발생했습니다.", "오류", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "이미 대여중인 물품을 추가 대여할 수 없습니다.", "오류", JOptionPane.ERROR_MESSAGE);
                 }
             } else {
                 JOptionPane.showMessageDialog(this, "대여할 물품을 선택하세요.", "경고", JOptionPane.WARNING_MESSAGE);

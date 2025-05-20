@@ -11,6 +11,8 @@ public class MainWindow extends JFrame {
     private JTabbedPane tabbedPane;
     private ItemListPanel itemListPanel;
     private MyRentStatusPanel myRentStatusPanel;
+    private MyReservationPanel myReservationPanel;
+    private MyOverduePanel myOverduePanel;
     private AdminOutPanel adminOutPanel;
     private AdminRentPanel adminRentPanel;
     private AdminPanel adminPanel;
@@ -79,10 +81,13 @@ public class MainWindow extends JFrame {
         } else {
             itemListPanel = new ItemListPanel();
             myRentStatusPanel = new MyRentStatusPanel();
+            myReservationPanel = new MyReservationPanel();
+            myOverduePanel = new MyOverduePanel();
 
             tabbedPane.addTab("대여 물품 목록", new ImageIcon(), itemListPanel, "대여 물품을 보여줍니다");
             tabbedPane.addTab("내 대여 현황", new ImageIcon(), myRentStatusPanel, "내가 대여한 물품 및 현황을 보여줍니다");
-            tabbedPane.addTab("내 연체 현황", new ImageIcon(), new ItemListPanel(), "내가 연체한 물품 및 현황을 보여줍니다");
+            tabbedPane.addTab("내 예약 현황", new ImageIcon(), myReservationPanel, "나의 예약 현황을 보여줍니다");
+            tabbedPane.addTab("내 연체 현황", new ImageIcon(), myOverduePanel, "내가 연체한 물품 및 현황을 보여줍니다");
             
             // 일반 사용자 모드에서도 탭 변경 시 데이터를 갱신하는 리스너 추가
             tabbedPane.addChangeListener(new ChangeListener() {

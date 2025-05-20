@@ -24,7 +24,7 @@ public class MyRentStatusPanel extends JPanel {
     }
 
     private void initComponents() {
-        String[] columnNames = {"ID", "분류", "이름", "대여일", "반납일"};
+        String[] columnNames = {"ID", "분류", "이름", "대여일", "반납일", "대여상태"};
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -58,7 +58,7 @@ public class MyRentStatusPanel extends JPanel {
         try {
             conn = DatabaseManager.getInstance().getConnection();
 
-            String sql = "SELECT i.item_id, category, item_name, borrow_date, return_date " +
+            String sql = "SELECT i.item_id, category, item_name, borrow_date, return_date, r.rent_status " +
                     "FROM DB2025_ITEMS i, DB2025_RENT r " +
                     "WHERE r.user_id = ? AND i.item_id = r.item_id " +
                     "ORDER BY borrow_date DESC";
@@ -78,11 +78,12 @@ public class MyRentStatusPanel extends JPanel {
                 row.add(dateFormat.format(rs.getDate("borrow_date")));
                 String returnDate;
                 try {
-                    returnDate = dateFormat.format(rs.getString("return_date"));
+                    returnDate = dateFormat.format(rs.getDate("return_date"));
                 } catch (Exception e) {
                     returnDate = "-";
                 }
                 row.add(returnDate);
+                row.add(rs.getString("rent_status"));
 
                 tableModel.addRow(row);
             }

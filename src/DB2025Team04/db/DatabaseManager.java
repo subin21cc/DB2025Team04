@@ -89,6 +89,16 @@ public class DatabaseManager {
             conn = getConnection();
             conn.setAutoCommit(false); // 트랜잭션 시작
 
+            // 0. 대여 가능 여부 확인
+            String checkSql = "SELECT count(*) FROM DB2025_RENT WHERE item_id = ? AND user_id = ? AND rent_status in ('대여중', '대여신청', '연체중')";
+            stmt = conn.prepareStatement(checkSql);
+            stmt.setInt(1, itemId);
+            stmt.setInt(2, userId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next() && rs.getInt(1) > 0) {
+                return false; // 이미 대여중인 물품
+            }
+
             // 1. 물품 수량 감소
             String sql = "UPDATE DB2025_ITEMS SET available_quantity = available_quantity - 1 " +
                     "WHERE item_id = ? AND available_quantity > 0";
@@ -206,12 +216,19 @@ public class DatabaseManager {
             int rowsAffected = stmt.executeUpdate();
 
             if (rowsAffected > 0) {
-                conn.commit(); // 모든 작업 성공 시 커밋
-                return true;
-            } else {
-                conn.rollback(); // 대여 기록 삭제 실패 시 롤백
-                return false; // 대여 기록이 없거나 삭제 불가능한 경우
+                // 2. 물품 수량 증가
+                sql = "UPDATE DB2025_ITEMS SET available_quantity = available_quantity + 1 " +
+                        "WHERE item_id = (SELECT item_id FROM DB2025_RENT WHERE rent_id = ?)";
+                stmt = conn.prepareStatement(sql);
+                stmt.setInt(1, rentId);
+                int rowsAffected2 = stmt.executeUpdate();
+                if (rowsAffected2 > 0) {
+                    conn.commit(); // 모든 작업 성공 시 커밋
+                    return true;
+                }
             }
+            conn.rollback(); // 대여 기록 삭제 실패 시 롤백
+            return false; // 대여 기록이 없거나 삭제 불가능한 경우
         } catch (SQLException e) {
             try {
                 if (conn != null) {
