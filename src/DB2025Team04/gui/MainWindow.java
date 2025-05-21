@@ -15,7 +15,7 @@ public class MainWindow extends JFrame {
     private MyOverduePanel myOverduePanel;
     private AdminOutPanel adminOutPanel;
     private AdminRentPanel adminRentPanel;
-    private AdminPanel adminPanel;
+    private AdminUserPanel adminUserPanel;
 
     public MainWindow() {
         setTitle("이화 물품 대여 서비스");
@@ -52,12 +52,12 @@ public class MainWindow extends JFrame {
             itemListPanel = new ItemListPanel();
             adminOutPanel = new AdminOutPanel();
             adminRentPanel = new AdminRentPanel();
-            adminPanel = new AdminPanel();
+            adminUserPanel = new AdminUserPanel();
 
             tabbedPane.addTab("대여 물품 관리", new ImageIcon(), itemListPanel, "대여 물품을 관리합니다");
             tabbedPane.addTab("출고예정", new ImageIcon(), adminOutPanel, "출고예정인 물품을 보여줍니다");
             tabbedPane.addTab("대여 현황", new ImageIcon(), adminRentPanel, "대여 물품의 반납을 처리합니다.");
-            tabbedPane.addTab("관리자 권한", new ImageIcon(), adminPanel, "관리자 권한을 부여하거나 삭제합니다.");
+            tabbedPane.addTab("사용자 관리", new ImageIcon(), adminUserPanel, "사용자 정보를 관리합니다.");
             
             // 탭 변경 이벤트 리스너 추가
             tabbedPane.addChangeListener(new ChangeListener() {
@@ -101,6 +101,10 @@ public class MainWindow extends JFrame {
                         case 1: // 내 대여 현황 탭
                             myRentStatusPanel.loadItemList();
                             break;
+                        case 2: // 내 예약 현황
+                            myReservationPanel.loadReservationList();
+                            break;
+
                     }
                 }
             });
