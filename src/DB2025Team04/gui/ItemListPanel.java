@@ -173,7 +173,7 @@ public class ItemListPanel extends JPanel {
             });
         } else {
             // 일반 사용자 모드
-            rentButton = new JButton("대여");
+            rentButton = new JButton("대여신청");
             reservationButton = new JButton("예약");
 
             // 초기 상태에서는 버튼 비활성화
