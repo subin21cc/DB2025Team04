@@ -93,48 +93,6 @@ public class AdminRentPanel extends JPanel {
                 }
             }
         });
-
-        JPanel buttonPanel = new JPanel();
-        rentButton = new JButton("대여");
-        reservationButton = new JButton("예약");
-        deleteButton = new JButton("Delete");
-
-        // 초기 상태에서는 버튼 비활성화
-        rentButton.setEnabled(false);
-        reservationButton.setEnabled(false);
-
-        buttonPanel.add(rentButton);
-        buttonPanel.add(reservationButton);
-        buttonPanel.add(deleteButton);
-
-        rentButton.addActionListener(e -> {
-            int selectedRow = itemTable.getSelectedRow();
-            if (selectedRow != -1) {
-                int itemId = (int) tableModel.getValueAt(selectedRow, 0);
-                // Handle rent action
-                if (DatabaseManager.getInstance().processRental(itemId, SessionManager.getInstance().getUserId())) {
-                    JOptionPane.showMessageDialog(this, "대여가 완료되었습니다.");
-                    loadItemList(); // Refresh the item list
-                } else {
-                    JOptionPane.showMessageDialog(this, "대여 처리 중 오류가 발생했습니다.", "오류", JOptionPane.ERROR_MESSAGE);
-                }
-            } else {
-                JOptionPane.showMessageDialog(this, "대여할 물품을 선택하세요.", "경고", JOptionPane.WARNING_MESSAGE);
-            }
-        });
-
-        reservationButton.addActionListener(e -> {
-            int selectedRow = itemTable.getSelectedRow();
-            if (selectedRow != -1) {
-                int itemId = (int) tableModel.getValueAt(selectedRow, 0);
-                // Handle reservation action
-                JOptionPane.showMessageDialog(this, "예약 버튼 클릭: " + itemId);
-            } else {
-                JOptionPane.showMessageDialog(this, "예약할 물품을 선택하세요.", "경고", JOptionPane.WARNING_MESSAGE);
-            }
-        });
-
-        add(buttonPanel, BorderLayout.SOUTH);
     }
 
     public void loadItemList() {
