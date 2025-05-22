@@ -23,6 +23,8 @@ import java.util.Vector;
 public class AdminRentPanel extends JPanel {
     private JTable itemTable;
     private DefaultTableModel tableModel;
+    private JRadioButton detailRadio;
+    private JRadioButton userSummaryRadio;
     private JButton rentButton;
     private JButton reservationButton;
     private JButton deleteButton;
@@ -42,21 +44,33 @@ public class AdminRentPanel extends JPanel {
 
     private void initComponents() {
         JPanel topPanel = new JPanel();
-        topPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        topPanel.setLayout(new GridLayout(2, 1) );
+
+        JPanel radioPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+
+        detailRadio = new JRadioButton("상세 보기", true);
+        userSummaryRadio = new JRadioButton("사용자 요약");
+        ButtonGroup viewGroup = new ButtonGroup();
+        viewGroup.add(detailRadio);
+        viewGroup.add(userSummaryRadio);
+
+        radioPanel.add(detailRadio);
+        radioPanel.add(userSummaryRadio);
 
         allCheckBox = new JCheckBox("전체", true);
         checkBox1 = new JCheckBox("대여신청", true);
         checkBox2 = new JCheckBox("대여중", true);
-        checkBox3 = new JCheckBox("반납", true);
+        checkBox3 = new JCheckBox("반납완료", true);
         checkBox4 = new JCheckBox("연체중", true);
         checkBox5 = new JCheckBox("연체반납", true);
 
-        topPanel.add(allCheckBox);
-        topPanel.add(checkBox1);
-        topPanel.add(checkBox2);
-        topPanel.add(checkBox3);
-        topPanel.add(checkBox4);
-        topPanel.add(checkBox5);
+        filterPanel.add(allCheckBox);
+        filterPanel.add(checkBox1);
+        filterPanel.add(checkBox2);
+        filterPanel.add(checkBox3);
+        filterPanel.add(checkBox4);
+        filterPanel.add(checkBox5);
 
         ActionListener checkAllListener = e -> {
             boolean isSelected = allCheckBox.isSelected();
@@ -76,13 +90,16 @@ public class AdminRentPanel extends JPanel {
             allCheckBox.setSelected(allChecked);
         };
 
-        ItemListener reloadListener = e -> loadItemList();
+        ItemListener reloadListener = e -> {
+            if (detailRadio.isSelected()) loadItemList();
+        };
+
         checkBox1.addItemListener(reloadListener);
         checkBox2.addItemListener(reloadListener);
         checkBox3.addItemListener(reloadListener);
         checkBox4.addItemListener(reloadListener);
         checkBox5.addItemListener(reloadListener);
-        allCheckBox.addActionListener(e -> loadItemList());  // 클릭 시 테이블 갱신
+        allCheckBox.addActionListener(e -> loadItemList());
 
         allCheckBox.addActionListener(checkAllListener);
         checkBox1.addItemListener(itemSyncListener);
@@ -90,6 +107,18 @@ public class AdminRentPanel extends JPanel {
         checkBox3.addItemListener(itemSyncListener);
         checkBox4.addItemListener(itemSyncListener);
         checkBox5.addItemListener(itemSyncListener);
+
+        detailRadio.addActionListener(e -> {
+            loadItemList();
+            filterPanel.setVisible(true);
+        });
+        userSummaryRadio.addActionListener(e -> {
+            loadUserOverview();
+            filterPanel.setVisible(false);
+        });
+
+        topPanel.add(radioPanel);
+        topPanel.add(filterPanel);
         add(topPanel, BorderLayout.NORTH);
 
         // Table
@@ -116,30 +145,42 @@ public class AdminRentPanel extends JPanel {
             List<String> selectedStatuses = new ArrayList<>();
             if (checkBox1.isSelected()) selectedStatuses.add("대여신청");
             if (checkBox2.isSelected()) selectedStatuses.add("대여중");
-            if (checkBox3.isSelected()) selectedStatuses.add("반납");
+            if (checkBox3.isSelected()) selectedStatuses.add("반납완료");
             if (checkBox4.isSelected()) selectedStatuses.add("연체중");
             if (checkBox5.isSelected()) selectedStatuses.add("연체반납");
 
             conn = DatabaseManager.getInstance().getConnection();
 
-            String inClause = String.join(",", Collections.nCopies(selectedStatuses.size(), "?"));
-            String sql = "SELECT rent_id,category, item_name, user_name, borrow_date, return_date, rent_status " +
-                    "FROM DB2025_ITEMS, DB2025_RENT, DB2025_USER " +
-                    "WHERE rent_status IN (" + inClause + ") " +
-                    "ORDER BY borrow_date DESC";
-
-            stmt = conn.prepareStatement(sql);
-
-            for (int i = 0; i < selectedStatuses.size(); i++) {
-                stmt.setString(i + 1, selectedStatuses.get(i));
+            String sql;
+            if (selectedStatuses.isEmpty()) {
+                sql = "SELECT r.rent_id, i.category, i.item_name, u.user_name, " +
+                        "r.borrow_date, r.return_date, r.rent_status " +
+                        "FROM DB2025_RENT r " +
+                        "JOIN DB2025_ITEMS i ON r.item_id = i.item_id " +
+                        "JOIN DB2025_USER u ON r.user_id = u.user_id " +
+                        "ORDER BY r.borrow_date DESC";
+                stmt = conn.prepareStatement(sql);
+            } else {
+                String inClause = String.join(",", Collections.nCopies(selectedStatuses.size(), "?"));
+                sql = "SELECT r.rent_id, i.category, i.item_name, u.user_name, " +
+                        "r.borrow_date, r.return_date, r.rent_status " +
+                        "FROM DB2025_RENT r " +
+                        "JOIN DB2025_ITEMS i ON r.item_id = i.item_id " +
+                        "JOIN DB2025_USER u ON r.user_id = u.user_id " +
+                        "WHERE r.rent_status IN (" + inClause + ") " +
+                        "ORDER BY r.borrow_date DESC";
+                stmt = conn.prepareStatement(sql);
+                for (int i = 0; i < selectedStatuses.size(); i++) {
+                    stmt.setString(i + 1, selectedStatuses.get(i));
+                }
             }
 
             rs = stmt.executeQuery();
 
+            String[] columns = {"ID", "분류", "대여물품", "대여자", "대여일", "반납일", "대여상태", "경과일수"};
+            tableModel.setColumnIdentifiers(columns);
             tableModel.setRowCount(0);
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            LocalDate today = LocalDate.now();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
             while (rs.next()) {
                 Vector<Object> row = new Vector<>();
@@ -168,4 +209,38 @@ public class AdminRentPanel extends JPanel {
         }
     }
 
+    public void loadUserOverview() {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = DatabaseManager.getInstance().getConnection();
+            String sql = "SELECT user_id, user_name, active_rental_count, overdue_count, rented_items " +
+                    "FROM VIEW_USER_RENTAL_OVERVIEW " +
+                    "ORDER BY overdue_count DESC";
+            stmt = conn.prepareStatement(sql);
+            rs = stmt.executeQuery();
+
+            String[] columns = {"ID", "대여자", "대여중/연체중", "연체건수", "대여 중인 물품"};
+            tableModel.setColumnIdentifiers(columns);
+            tableModel.setRowCount(0);
+
+            while (rs.next()) {
+                Vector<Object> row = new Vector<>();
+                row.add(rs.getInt("user_id"));
+                row.add(rs.getString("user_name"));
+                row.add(rs.getInt("active_rental_count"));
+                row.add(rs.getInt("overdue_count"));
+                row.add(rs.getString("rented_items") != null ? rs.getString("rented_items") : "-");
+                tableModel.addRow(row);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "사용자 요약 정보 로딩 실패: " + e.getMessage(),
+                    "Database Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        } finally {
+            DatabaseManager.getInstance().closeResources(conn, stmt, rs);
+        }
+    }
 }

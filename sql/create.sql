@@ -60,7 +60,7 @@ CREATE TABLE DB2025_RENT
     borrow_date DATE                     NOT NULL DEFAULT (CURRENT_DATE),
     due_date    DATE GENERATED ALWAYS AS (borrow_date + INTERVAL 7 DAY) STORED,
     return_date DATE,
-    rent_status ENUM ('대여신청','대여중','반납완료','연체중', '연체완료') NOT NULL DEFAULT '대여신청',
+    rent_status ENUM ('대여신청','대여중','반납완료','연체중', '연체반납') NOT NULL DEFAULT '대여신청',
     FOREIGN KEY (item_id) REFERENCES DB2025_ITEMS (item_id) ON DELETE RESTRICT,
     FOREIGN KEY (user_id) REFERENCES DB2025_USER (user_id) ON DELETE RESTRICT
 ) ENGINE = InnoDB
@@ -226,7 +226,7 @@ INSERT INTO DB2025_RENT (item_id, user_id, borrow_date, return_date, rent_status
     (3009, 2025009, '2025-05-15', NULL, '대여신청'),
     (3003, 2025010, '2025-05-10', '2025-05-18', '반납완료'),
     (3003, 2025004, '2025-05-14', NULL, '대여중'),
-    (3002, 2025008, '2025-04-22', '2025-05-01', '연체완료'),
+    (3002, 2025008, '2025-04-22', '2025-05-01', '연체반납'),
     (3006, 2025002, '2025-05-03', NULL, '대여중');
 
 -- 예약 데이터
