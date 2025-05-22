@@ -1,3 +1,21 @@
+-- MySQL 데이터베이스 생성
+CREATE DATABASE IF NOT EXISTS DB2025Team04
+    DEFAULT CHARACTER SET utf8mb4
+    DEFAULT COLLATE utf8mb4_unicode_ci;
+
+-- MySQL 사용자 생성 및 권한 부여
+CREATE USER IF NOT EXISTS 'DB2025Team04'@'localhost' IDENTIFIED BY 'DB2025Team04';
+CREATE USER IF NOT EXISTS 'DB2025Team04'@'%' IDENTIFIED BY 'DB2025Team04';
+
+-- 로컬 호스트에서 접속하는 사용자에게 모든 권한 부여
+GRANT ALL PRIVILEGES ON DB2025Team04.* TO 'DB2025Team04'@'localhost';
+
+-- 원격 접속 사용자에게 모든 권한 부여
+GRANT ALL PRIVILEGES ON DB2025Team04.* TO 'DB2025Team04'@'%';
+
+-- 권한 설정 적용
+FLUSH PRIVILEGES;
+
 -- 데이터베이스 사용 선언
 USE DB2025Team04;
 
@@ -164,3 +182,49 @@ CREATE INDEX idx_overdue_user_id ON DB2025_OVERDUES (user_id);
 CREATE INDEX idx_item_category ON DB2025_ITEMS (category);
 CREATE INDEX idx_overdues_user_item_restriction ON DB2025_OVERDUES (user_id, item_id, restriction_end);
 CREATE INDEX idx_rent_user_status_due ON DB2025_RENT (user_id, rent_status, due_date);
+
+-- 사용자 데이터
+INSERT INTO DB2025_USER (user_id, user_pw, user_name, user_dep, user_phone, user_status) VALUES
+    (2025001, SHA2('pw1234',256), '김철수', '컴퓨터공학과', '010-1111-2222', '대여가능'),
+    (2025002, SHA2('pw5678',256), '이영희', '전자공학과', '010-2222-3333', '대여가능'),
+    (2025003, SHA2('pwabcd',256), '박민수', '기계공학과', '010-3333-4444', '대여불가'),
+    (2025004, SHA2('pwefgh',256), '최지은', '경영학과', '010-4444-5555', '대여가능'),
+    (2025005, SHA2('pw0005',256), '박영희', '화학과',     '010-5555-6666', '대여가능'),
+    (2025006, SHA2('pw0006',256), '최민호', '물리학과',   '010-6666-7777', '대여가능'),
+    (2025007, SHA2('pw0007',256), '정수연', '수학과',     '010-7777-8888', '대여불가'),
+    (2025008, SHA2('pw0008',256), '이준호', '경제학과',   '010-8888-9999', '대여가능'),
+    (2025009, SHA2('pw0009',256), '김하나', '심리학과',   '010-9999-0000', '대여가능'),
+    (2025010, SHA2('pw0010',256), '한지민', '디자인학과', '010-1010-2020', '대여가능');
+
+-- 관리자 데이터
+INSERT INTO DB2025_ADMIN (user_id) VALUES
+    (2025001),
+    (2025004),
+    (2025006);
+
+-- 대여물품 데이터
+INSERT INTO DB2025_ITEMS (item_id, item_name, quantity, available_quantity, category) VALUES
+    (3001, '노트북', 10, 7, '전자기기'),
+    (3002, '빔프로젝터', 5, 2, '전자기기'),
+    (3003, '공학용계산기', 20, 15, '학습기기'),
+    (3004, '회의용마이크', 8,  0, '음향기기'),
+    (3005, '태블릿', 7, 5, '전자기기'),
+    (3006, '디지털카메라', 4, 1, '전자기기'),
+    (3007, '볼펜', 3, 2, '필기구'),
+    (3008, '지우개', 2, 1, '필기구'),
+    (3009, '컴퓨터사인펜', 12,  12, '필기구');
+
+-- 대여 데이터
+INSERT INTO DB2025_RENT (item_id, user_id, borrow_date, return_date, rent_status) VALUES
+    (3001, 2025001, '2025-05-01', NULL, '대여중'),
+    (3002, 2025002, '2025-04-25', '2025-05-02', '반납완료'),
+    (3004, 2025003, '2025-04-20', NULL, '연체중'),
+    (3005, 2025005, '2025-05-10', NULL, '대여신청'),
+    (3006, 2025006, '2025-05-05', '2025-05-12', '반납완료'),
+    (3007, 2025007, '2025-05-12', NULL, '대여중'),
+    (3008, 2025008, '2025-04-28', NULL, '연체중'),
+    (3009, 2025009, '2025-05-15', NULL, '대여신청'),
+    (3003, 2025010, '2025-05-10', '2025-05-18', '반납완료'),
+    (3003, 2025004, '2025-05-14', NULL, '대여중'),
+    (3002, 2025008, '2025-04-22', '2025-05-01', '연체완료'),
+    (3006, 2025002, '2025-05-03', NULL, '대여중');
