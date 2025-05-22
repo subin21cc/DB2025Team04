@@ -21,15 +21,17 @@ USE DB2025Team04;
 
 -- 테이블 생성
 -- 사용자 테이블블
-CREATE TABLE DB2025_USER (
-                             user_id     INT PRIMARY KEY,
-                             user_pw     VARCHAR(64)          NOT NULL,
-                             user_name   VARCHAR(50)          NOT NULL,
-                             user_dep    VARCHAR(50)          NOT NULL CHECK (user_dep REGEXP '학과$'),
+CREATE TABLE DB2025_USER
+(
+    user_id     INT PRIMARY KEY,
+    user_pw     VARCHAR(64)          NOT NULL,
+    user_name   VARCHAR(50)          NOT NULL,
+    user_dep    VARCHAR(50)          NOT NULL CHECK (user_dep REGEXP '학과$|^전공미진입$'
+        ),
     user_phone  VARCHAR(20) UNIQUE   NOT NULL,
     user_status ENUM ('대여가능','대여불가') NOT NULL DEFAULT '대여가능'
-)ENGINE = InnoDB
- DEFAULT CHARSET = utf8mb4;
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
 
 -- 관리자 테이블
 CREATE TABLE DB2025_ADMIN
