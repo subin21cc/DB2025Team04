@@ -7,6 +7,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemListener;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,6 +15,9 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Vector;
 
 public class AdminRentPanel extends JPanel {
@@ -22,6 +26,13 @@ public class AdminRentPanel extends JPanel {
     private JButton rentButton;
     private JButton reservationButton;
     private JButton deleteButton;
+    private JCheckBox allCheckBox;
+    private JCheckBox checkBox1;
+    private JCheckBox checkBox2;
+    private JCheckBox checkBox3;
+    private JCheckBox checkBox4;
+    private JCheckBox checkBox5;
+
 
     public AdminRentPanel() {
         setLayout(new BorderLayout());
@@ -33,12 +44,12 @@ public class AdminRentPanel extends JPanel {
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 
-        JCheckBox allCheckBox = new JCheckBox("전체", true);
-        JCheckBox checkBox1 = new JCheckBox("대여신청", true);
-        JCheckBox checkBox2 = new JCheckBox("대여중", true);
-        JCheckBox checkBox3 = new JCheckBox("반납완료", true);
-        JCheckBox checkBox4 = new JCheckBox("연체중", true);
-        JCheckBox checkBox5 = new JCheckBox("연체완료", true);
+        allCheckBox = new JCheckBox("전체", true);
+        checkBox1 = new JCheckBox("대여신청", true);
+        checkBox2 = new JCheckBox("대여중", true);
+        checkBox3 = new JCheckBox("반납", true);
+        checkBox4 = new JCheckBox("연체중", true);
+        checkBox5 = new JCheckBox("연체반납", true);
 
         topPanel.add(allCheckBox);
         topPanel.add(checkBox1);
@@ -56,10 +67,33 @@ public class AdminRentPanel extends JPanel {
             checkBox5.setSelected(isSelected);
         };
 
+        ItemListener itemSyncListener = e -> {
+            boolean allChecked = checkBox1.isSelected()
+                                 && checkBox2.isSelected()
+                                 && checkBox3.isSelected()
+                                 && checkBox4.isSelected()
+                                 && checkBox5.isSelected();
+            allCheckBox.setSelected(allChecked);
+        };
+
+        ItemListener reloadListener = e -> loadItemList();
+        checkBox1.addItemListener(reloadListener);
+        checkBox2.addItemListener(reloadListener);
+        checkBox3.addItemListener(reloadListener);
+        checkBox4.addItemListener(reloadListener);
+        checkBox5.addItemListener(reloadListener);
+        allCheckBox.addActionListener(e -> loadItemList());  // 클릭 시 테이블 갱신
+
+        allCheckBox.addActionListener(checkAllListener);
+        checkBox1.addItemListener(itemSyncListener);
+        checkBox2.addItemListener(itemSyncListener);
+        checkBox3.addItemListener(itemSyncListener);
+        checkBox4.addItemListener(itemSyncListener);
+        checkBox5.addItemListener(itemSyncListener);
         add(topPanel, BorderLayout.NORTH);
 
         // Table
-        String[] columns = {"ID", "분류", "이름", "대여자", "대여일", "반납일", "대여상태", "경과일수"};
+        String[] columns = {"ID", "분류", "대여물품", "대여자", "대여일", "반납일", "대여상태", "경과일수"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -71,28 +105,6 @@ public class AdminRentPanel extends JPanel {
 
         JScrollPane scrollPane = new JScrollPane(itemTable);
         add(scrollPane, BorderLayout.CENTER);
-
-        itemTable.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {  // 이벤트가 조정 중이 아닐 때만 처리
-                int selectedRow = itemTable.getSelectedRow();
-                if (selectedRow != -1) {  // 선택된 행이 있는 경우
-                    // 대여가능수량은 4번 인덱스(5번째 열)에 있음
-                    int availableQuantity = (int) tableModel.getValueAt(selectedRow, 4);
-
-                    // 대여가능수량에 따라 버튼 활성화/비활성화
-                    if (availableQuantity > 0) {
-                        rentButton.setEnabled(true);
-                        reservationButton.setEnabled(false);
-                    } else {
-                        rentButton.setEnabled(false);
-                        reservationButton.setEnabled(true);
-                    }
-                } else {  // 선택된 행이 없는 경우 모두 비활성화
-                    rentButton.setEnabled(false);
-                    reservationButton.setEnabled(false);
-                }
-            }
-        });
     }
 
     public void loadItemList() {
@@ -101,15 +113,27 @@ public class AdminRentPanel extends JPanel {
         ResultSet rs = null;
 
         try {
+            List<String> selectedStatuses = new ArrayList<>();
+            if (checkBox1.isSelected()) selectedStatuses.add("대여신청");
+            if (checkBox2.isSelected()) selectedStatuses.add("대여중");
+            if (checkBox3.isSelected()) selectedStatuses.add("반납");
+            if (checkBox4.isSelected()) selectedStatuses.add("연체중");
+            if (checkBox5.isSelected()) selectedStatuses.add("연체반납");
+
             conn = DatabaseManager.getInstance().getConnection();
 
-            String sql = "SELECT r.rent_id, i.category, i.item_name, r.borrow_date, u.user_name, r.rent_status, r.return_date " +
-                    "FROM DB2025_ITEMS i, DB2025_RENT r, DB2025_USER u " +
-                    "WHERE i.item_id = r.item_id AND r.user_id = u.user_id " +
+            String inClause = String.join(",", Collections.nCopies(selectedStatuses.size(), "?"));
+            String sql = "SELECT rent_id, user_name, item_name, borrow_date, return_date, rent_status " +
+                    "FROM VIEW_RENT_DETAIL " +
+                    "WHERE rent_status IN (" + inClause + ") " +
                     "ORDER BY borrow_date DESC";
 
             stmt = conn.prepareStatement(sql);
-//            stmt.setInt(1, SessionManager.getInstance().getUserId());
+
+            for (int i = 0; i < selectedStatuses.size(); i++) {
+                stmt.setString(i + 1, selectedStatuses.get(i));
+            }
+
             rs = stmt.executeQuery();
 
             tableModel.setRowCount(0);
