@@ -226,6 +226,7 @@ public class AdminRentPanel extends JPanel {
             tableModel.setColumnIdentifiers(columns);
             tableModel.setRowCount(0);
 
+
             while (rs.next()) {
                 Vector<Object> row = new Vector<>();
                 row.add(rs.getInt("user_id"));
