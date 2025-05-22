@@ -74,9 +74,14 @@ public class UserDialog extends JDialog {
         passwordField = new JPasswordField(20);
         inputPanel.add(passwordField, gbc);
         
-        if (isEditing) {
-            inputPanel.add(new JLabel("(변경 시에만 입력)"), gbc);
-        }
+//        if (isEditing) {
+//            inputPanel.add(new JLabel("(변경 시에만 입력)"), gbc);
+//        }
+        // "(변경 시에만 입력)" 라벨 추가
+        gbc.gridx = 2; // 같은 행의 오른쪽에 위치하도록 설정
+        gbc.gridy = 1; // 비밀번호 필드와 같은 행
+        gbc.anchor = GridBagConstraints.WEST; // 왼쪽 정렬
+        inputPanel.add(new JLabel("(변경 시에만 입력)"), gbc);
         
         // 이름
         gbc.gridx = 0;
