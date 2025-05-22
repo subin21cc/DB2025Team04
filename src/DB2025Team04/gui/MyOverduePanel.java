@@ -87,7 +87,7 @@ public class MyOverduePanel extends JPanel {
         });
     }
     
-    private void loadOverdueList() {
+    public void loadOverdueList() {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;

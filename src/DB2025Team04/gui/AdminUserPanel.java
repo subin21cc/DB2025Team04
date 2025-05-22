@@ -189,7 +189,7 @@ public class AdminUserPanel extends JPanel {
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
-    private void loadUserList() {
+    public void loadUserList() {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;

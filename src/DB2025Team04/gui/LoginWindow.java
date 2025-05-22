@@ -13,12 +13,13 @@ import java.sql.SQLException;
 public class LoginWindow extends JFrame {
     private JTextField idField;
     private JPasswordField passwordField;
-    private JComboBox<String> userTypeCombo;
+    private JRadioButton normalUserRadio;
+    private JRadioButton adminRadio;
     
     public LoginWindow() {
         setTitle("로그인");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(300, 200);
+        setSize(300, 250);
         setLocationRelativeTo(null);
         
         // 메인 패널
@@ -26,12 +27,23 @@ public class LoginWindow extends JFrame {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         
-        // 사용자 타입 선택
-        userTypeCombo = new JComboBox<>(new String[]{"일반 사용자", "관리자"});
+        // 라디오 버튼으로 사용자 타입 선택
+        ButtonGroup userTypeGroup = new ButtonGroup();
+        normalUserRadio = new JRadioButton("일반 사용자", true); // true로 설정하여 기본 선택
+        adminRadio = new JRadioButton("관리자");
+
+        userTypeGroup.add(normalUserRadio);
+        userTypeGroup.add(adminRadio);
+
+        // 라디오 버튼을 담을 패널
+        JPanel radioPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        radioPanel.add(normalUserRadio);
+        radioPanel.add(adminRadio);
+
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 2;
-        mainPanel.add(userTypeCombo, gbc);
+        mainPanel.add(radioPanel, gbc);
         
         // ID 라벨과 필드
         gbc.gridwidth = 1;
@@ -67,7 +79,7 @@ public class LoginWindow extends JFrame {
 
         // 로그인 버튼 이벤트
         loginButton.addActionListener(e -> {
-            int userTypeIndex = userTypeCombo.getSelectedIndex(); // 0: 일반 사용자, 1: 관리자
+            int userTypeIndex = adminRadio.isSelected() ? 1 : 0; // 관리자면 1, 일반 사용자면 0
             String id = idField.getText();
             String password = new String(passwordField.getPassword());
             
@@ -90,7 +102,25 @@ public class LoginWindow extends JFrame {
                     JOptionPane.ERROR_MESSAGE);
             }
         });
-        
+
+        // 도움말 버튼
+        JButton helpButton = new JButton("도움말");
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.SOUTHEAST; // 우측 하단 정렬
+        mainPanel.add(helpButton, gbc);
+        helpButton.addActionListener(e -> {
+            JTextArea textArea = new JTextArea(10, 30);
+            textArea.setText("\n1. 아이디와 비밀번호를 입력하고 로그인 버튼을 클릭하세요.\n\n" +
+                    "2. 회원가입이 필요한 경우 관리자에게 신청하세요.\n\n" +
+                    "3. 초기 비밀번호는 아이디(학번)와 동일합니다.\n\n" +
+                    "4. 비밀번호는 '내정보' -> '비밀번호 변경'에서 변경할 수 있습니다.");
+            textArea.setEditable(false);
+            JOptionPane.showMessageDialog(this, new JScrollPane(textArea), "도움말", JOptionPane.INFORMATION_MESSAGE);
+        });
+
+
         add(mainPanel);
     }
     

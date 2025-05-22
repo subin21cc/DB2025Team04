@@ -127,6 +127,46 @@ public class MainWindow extends JFrame {
         setJMenuBar(menuBar);
     }
 
+    private void refreshCurrentTab() {
+        int selectedIndex = tabbedPane.getSelectedIndex();
+
+        if (SessionManager.getInstance().isAdmin()) { //관리자 화면 새로고침
+            switch (selectedIndex) {
+                case 0: // 대여 물품 관리
+                    itemListPanel.loadItemList();
+                    break;
+                case 1: // 출고 예정
+                    adminOutPanel.loadItemList();
+                    break;
+                case 2: // 대여 현황
+                    adminRentPanel.loadItemList();
+                    break;
+                case 3: // 사용자 관리
+                    adminUserPanel.loadUserList();
+                    break;
+                default:
+                    break;
+            }
+        } else { //사용자 화면 새로고침
+            switch (selectedIndex) {
+                case 0: // 대여 물품 목록
+                    itemListPanel.loadItemList();
+                    break;
+                case 1: // 내 대여 현황
+                    myRentStatusPanel.loadItemList();
+                    break;
+                case 2: // 내 예약 현황
+                    myReservationPanel.loadReservationList();
+                    break;
+                case 3: // 내 연체 현황
+                    myOverduePanel.loadOverdueList();
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
     private JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
 
@@ -136,7 +176,7 @@ public class MainWindow extends JFrame {
             // 비밀번호 변경 대화상자 생성 및 표시
             UserPasswordDialog passwordDialog = new UserPasswordDialog(this, "비밀번호 변경");
             passwordDialog.setVisible(true);
-            
+
             // 대화상자가 확인 버튼으로 닫힌 경우 처리
             if (passwordDialog.isConfirmed()) {
                 // 비밀번호 변경 처리
@@ -206,11 +246,14 @@ public class MainWindow extends JFrame {
         help.add(rentHelp);
         help.add(reserveHelp);
 
-        JMenu refresh = new JMenu("새로고침");
+        JMenu refreshItem = new JMenu("새로고침");
+        refreshItem.addActionListener(e -> refreshCurrentTab());
+
+
 
         menuBar.add(myInfo);
         menuBar.add(help);
-        menuBar.add(refresh);
+        menuBar.add(refreshItem);
 
         return menuBar;
     }
@@ -225,42 +268,42 @@ public class MainWindow extends JFrame {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        
+
         try {
             conn = DatabaseManager.getInstance().getConnection();
-            
+
             // 1. 현재 비밀번호가 맞는지 확인
             String checkSql = "SELECT * FROM DB2025_USER WHERE user_id = ? AND user_pw = SHA2(?, 256)";
             stmt = conn.prepareStatement(checkSql);
             stmt.setInt(1, userId);
             stmt.setString(2, currentPassword);
             rs = stmt.executeQuery();
-            
+
             if (rs.next()) {
                 // 현재 비밀번호가 맞으면 새 비밀번호로 업데이트
                 stmt.close(); // 이전 문장 닫기
-                
+
                 String updateSql = "UPDATE DB2025_USER SET user_pw = SHA2(?, 256) WHERE user_id = ?";
                 stmt = conn.prepareStatement(updateSql);
                 stmt.setString(1, newPassword);
                 stmt.setInt(2, userId);
-                
+
                 int result = stmt.executeUpdate();
-                
+
                 if (result > 0) {
-                    JOptionPane.showMessageDialog(this, "비밀번호가 성공적으로 변경되었습니다.", 
+                    JOptionPane.showMessageDialog(this, "비밀번호가 성공적으로 변경되었습니다.",
                                                  "비밀번호 변경 완료", JOptionPane.INFORMATION_MESSAGE);
                 } else {
-                    JOptionPane.showMessageDialog(this, "비밀번호 변경에 실패했습니다.", 
+                    JOptionPane.showMessageDialog(this, "비밀번호 변경에 실패했습니다.",
                                                  "오류", JOptionPane.ERROR_MESSAGE);
                 }
             } else {
                 // 현재 비밀번호가 틀린 경우
-                JOptionPane.showMessageDialog(this, "현재 비밀번호가 일치하지 않습니다.", 
+                JOptionPane.showMessageDialog(this, "현재 비밀번호가 일치하지 않습니다.",
                                              "오류", JOptionPane.ERROR_MESSAGE);
             }
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "비밀번호 변경 중 오류가 발생했습니다: " + ex.getMessage(), 
+            JOptionPane.showMessageDialog(this, "비밀번호 변경 중 오류가 발생했습니다: " + ex.getMessage(),
                                          "오류", JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
         } finally {
