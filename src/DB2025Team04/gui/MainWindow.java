@@ -1,11 +1,16 @@
 package DB2025Team04.gui;
 
+import DB2025Team04.db.DatabaseManager;
 import DB2025Team04.util.SessionManager;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class MainWindow extends JFrame {
     private JTabbedPane tabbedPane;
@@ -127,7 +132,21 @@ public class MainWindow extends JFrame {
 
         JMenu myInfo = new JMenu("내정보");
         JMenuItem editPwItem = new JMenuItem("비밀번호 변경");
-        editPwItem.addActionListener(e -> System.exit(0));
+        editPwItem.addActionListener(e -> {
+            // 비밀번호 변경 대화상자 생성 및 표시
+            UserPasswordDialog passwordDialog = new UserPasswordDialog(this, "비밀번호 변경");
+            passwordDialog.setVisible(true);
+            
+            // 대화상자가 확인 버튼으로 닫힌 경우 처리
+            if (passwordDialog.isConfirmed()) {
+                // 비밀번호 변경 처리
+                changePassword(
+                    SessionManager.getInstance().getUserId(),
+                    passwordDialog.getCurrentPassword(),
+                    passwordDialog.getNewPassword()
+                );
+            }
+        });
         myInfo.add(editPwItem);
 
         JMenu help = new JMenu("도움말");
@@ -194,5 +213,64 @@ public class MainWindow extends JFrame {
         menuBar.add(refresh);
 
         return menuBar;
+    }
+
+    /**
+     * 사용자 비밀번호를 변경하는 메서드
+     * @param userId 사용자 ID
+     * @param currentPassword 현재 비밀번호
+     * @param newPassword 새 비밀번호
+     */
+    private void changePassword(int userId, String currentPassword, String newPassword) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = DatabaseManager.getInstance().getConnection();
+            
+            // 1. 현재 비밀번호가 맞는지 확인
+            String checkSql = "SELECT * FROM DB2025_USER WHERE user_id = ? AND user_pw = SHA2(?, 256)";
+            stmt = conn.prepareStatement(checkSql);
+            stmt.setInt(1, userId);
+            stmt.setString(2, currentPassword);
+            rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                // 현재 비밀번호가 맞으면 새 비밀번호로 업데이트
+                stmt.close(); // 이전 문장 닫기
+                
+                String updateSql = "UPDATE DB2025_USER SET user_pw = SHA2(?, 256) WHERE user_id = ?";
+                stmt = conn.prepareStatement(updateSql);
+                stmt.setString(1, newPassword);
+                stmt.setInt(2, userId);
+                
+                int result = stmt.executeUpdate();
+                
+                if (result > 0) {
+                    JOptionPane.showMessageDialog(this, "비밀번호가 성공적으로 변경되었습니다.", 
+                                                 "비밀번호 변경 완료", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, "비밀번호 변경에 실패했습니다.", 
+                                                 "오류", JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                // 현재 비밀번호가 틀린 경우
+                JOptionPane.showMessageDialog(this, "현재 비밀번호가 일치하지 않습니다.", 
+                                             "오류", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "비밀번호 변경 중 오류가 발생했습니다: " + ex.getMessage(), 
+                                         "오류", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (stmt != null) stmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
     }
 }
