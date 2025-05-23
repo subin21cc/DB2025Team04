@@ -20,7 +20,7 @@ FLUSH PRIVILEGES;
 USE DB2025Team04;
 
 -- 테이블 생성
--- 사용자 테이블블
+-- 사용자 테이블
 CREATE TABLE DB2025_USER
 (
     user_id     INT PRIMARY KEY,
@@ -134,8 +134,8 @@ SELECT
         WHEN O.restriction_end IS NOT NULL
             AND O.restriction_end > CURRENT_DATE
             THEN '예약불가(연체중)'
-        WHEN I.available_quantity < 1
-            THEN '예약불가(재고없음)'
+        WHEN I.available_quantity > 0
+            THEN '대여가능'
         ELSE '예약가능'
         END AS reservation_status
 FROM DB2025_RESERVATION R
