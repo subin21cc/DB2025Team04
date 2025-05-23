@@ -149,6 +149,10 @@ public class AdminRentPanel extends JPanel {
             if (checkBox4.isSelected()) selectedStatuses.add("연체중");
             if (checkBox5.isSelected()) selectedStatuses.add("연체반납");
 
+            if (selectedStatuses.isEmpty()) {
+                tableModel.setRowCount(0);
+                return;
+            }
             conn = DatabaseManager.getInstance().getConnection();
 
             String sql;
