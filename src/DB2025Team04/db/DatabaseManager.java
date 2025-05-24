@@ -6,6 +6,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.TimeZone;
 
 public class DatabaseManager {
     private static final String DB_URL = "jdbc:mysql://localhost:3306/DB2025Team04";
@@ -35,14 +36,18 @@ public class DatabaseManager {
     }
 
     public Connection getConnection() throws SQLException {
-        Properties props = new Properties();
-        props.setProperty("user", USER);
-        props.setProperty("password", PASSWORD);
-        props.setProperty("useSSL", "false");
-        props.setProperty("allowPublicKeyRetrieval", "true");
-        props.setProperty("serverTimezone", "UTC");
-
-        return DriverManager.getConnection(DB_URL, props);
+        // DB URL에 서버 타임존을 시스템 로컬 타임존으로 설정하는 파라미터 추가
+        String timeZoneParam = "?serverTimezone=" + TimeZone.getDefault().getID();
+        
+        // 기존 URL에 파라미터가 있는지 확인하여 적절히 연결 문자 추가
+        String connectionUrl = DB_URL;
+        if (!DB_URL.contains("?")) {
+            connectionUrl += timeZoneParam;
+        } else if (!DB_URL.contains("serverTimezone")) {
+            connectionUrl += "&serverTimezone=" + TimeZone.getDefault().getID();
+        }
+        
+        return DriverManager.getConnection(connectionUrl, USER, PASSWORD);
     }
 
     public void closeResources(Connection conn, Statement stmt, ResultSet rs) {
