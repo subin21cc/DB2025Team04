@@ -88,6 +88,7 @@ public class DatabaseManager {
     public boolean processRental(int itemId, int userId) {
         Connection conn = null;
         PreparedStatement stmt = null;
+        ResultSet rs = null;
 
         try {
             conn = getConnection();
@@ -98,10 +99,32 @@ public class DatabaseManager {
             stmt = conn.prepareStatement(checkSql);
             stmt.setInt(1, itemId);
             stmt.setInt(2, userId);
-            ResultSet rs = stmt.executeQuery();
+            rs = stmt.executeQuery();
             if (rs.next() && rs.getInt(1) > 0) {
                 return false; // 이미 대여중인 물품
             }
+
+            // 물품 및 사용자 정보 조회
+            String getInfoSql = "SELECT i.item_name, i.category, i.available_quantity, i.quantity, " +
+                           "u.user_name, u.user_dep " +
+                           "FROM DB2025_ITEMS i, DB2025_USER u " +
+                           "WHERE i.item_id = ? AND u.user_id = ?";
+            stmt = conn.prepareStatement(getInfoSql);
+            stmt.setInt(1, itemId);
+            stmt.setInt(2, userId);
+            rs = stmt.executeQuery();
+
+            if (!rs.next()) {
+                conn.rollback();
+                return false; // 물품 또는 사용자 정보가 없음
+            }
+
+            String itemName = rs.getString("item_name");
+            String category = rs.getString("category");
+            String userName = rs.getString("user_name");
+            String userDep = rs.getString("user_dep");
+            int availableQuantity = rs.getInt("available_quantity");
+            int totalQuantity = rs.getInt("quantity");
 
             // 1. 물품 수량 감소
             String sql = "UPDATE DB2025_ITEMS SET available_quantity = available_quantity - 1 " +
@@ -117,7 +140,39 @@ public class DatabaseManager {
                 stmt.setInt(1, itemId);
                 stmt.setInt(2, userId);
                 int rowAffected2 = stmt.executeUpdate();
+
                 if (rowAffected2 > 0) {
+                    // 3. 대여 기록의 ID 가져오기
+                    int rentId = 0;
+                    sql = "SELECT LAST_INSERT_ID() as rent_id";
+                    stmt = conn.prepareStatement(sql);
+                    rs = stmt.executeQuery();
+                    if (rs.next()) {
+                        rentId = rs.getInt("rent_id");
+                    }
+
+                    // 4. 대여 로그 추가
+                    sql = "INSERT INTO DB2025_RENT_LOG " +
+                            "(rent_id, item_id, user_id, previous_status, current_status, " +
+                            "log_date, borrow_date, due_date, note, " +
+                            "item_name, item_category, user_name, user_dep, " +
+                            "available_quantity, total_quantity, operation_type, created_by) " +
+                            "VALUES (?, ?, ?, NULL, '대여신청', CURRENT_TIMESTAMP, NOW(), " +
+                            "DATE_ADD(NOW(), INTERVAL 7 DAY), '신규 대여 신청', ?, ?, ?, ?, ?, ?, '생성', ?)";
+
+                    stmt = conn.prepareStatement(sql);
+                    stmt.setInt(1, rentId);
+                    stmt.setInt(2, itemId);
+                    stmt.setInt(3, userId);
+                    stmt.setString(4, itemName);
+                    stmt.setString(5, category);
+                    stmt.setString(6, userName);
+                    stmt.setString(7, userDep);
+                    stmt.setInt(8, availableQuantity - 1); // 감소된 수량 반영
+                    stmt.setInt(9, totalQuantity);
+                    stmt.setString(10, "사용자"); // 사용자가 직접 대여한 경우
+
+                    stmt.executeUpdate();
                     conn.commit(); // 모든 작업 성공 시 커밋
                     return true;
                 }
@@ -135,21 +190,7 @@ public class DatabaseManager {
             e.printStackTrace();
             return false;
         } finally {
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true); // 자동 커밋 모드 복원
-                    conn.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
+            closeResources(conn, stmt, rs);
         }
     }
 
@@ -157,10 +198,53 @@ public class DatabaseManager {
     public boolean processOutDone(int rentId) {
         Connection conn = null;
         PreparedStatement stmt = null;
+        ResultSet rs = null;
 
         try {
             conn = getConnection();
             conn.setAutoCommit(false); // 트랜잭션 시작
+        
+            // 관련 정보 조회
+            String infoSql = "SELECT r.item_id, r.user_id, r.borrow_date, r.due_date, " +
+                         "i.item_name, i.category, i.available_quantity, i.quantity, " +
+                         "u.user_name, u.user_dep " +
+                         "FROM DB2025_RENT r " +
+                         "JOIN DB2025_ITEMS i ON r.item_id = i.item_id " +
+                         "JOIN DB2025_USER u ON r.user_id = u.user_id " +
+                         "WHERE r.rent_id = ? AND r.rent_status = '대여신청'";
+        
+            stmt = conn.prepareStatement(infoSql);
+            stmt.setInt(1, rentId);
+            rs = stmt.executeQuery();
+        
+            if (!rs.next()) {
+                conn.rollback();
+                return false; // 해당 대여 정보가 없거나 이미 처리됨
+            }
+
+            int itemId = rs.getInt("item_id");
+            int userId = rs.getInt("user_id");
+            Date borrowDate = rs.getDate("borrow_date");
+            Date dueDate = rs.getDate("due_date");
+            String itemName = rs.getString("item_name");
+            String category = rs.getString("category");
+            String userName = rs.getString("user_name");
+            String userDep = rs.getString("user_dep");
+            int availableQuantity = rs.getInt("available_quantity");
+            int totalQuantity = rs.getInt("quantity");
+
+            // 현재 관리자 정보 가져오기
+            int adminId = SessionManager.getInstance().getUserId();
+            String adminName = "";
+
+            String adminSql = "SELECT user_name FROM DB2025_USER WHERE user_id = ?";
+            stmt = conn.prepareStatement(adminSql);
+            stmt.setInt(1, adminId);
+            ResultSet adminRs = stmt.executeQuery();
+            if (adminRs.next()) {
+                adminName = adminRs.getString("user_name");
+            }
+            adminRs.close();
 
             // 1. 대여 기록 업데이트
             String sql = "UPDATE DB2025_RENT SET rent_status = '대여중' WHERE rent_id = ? AND rent_status = '대여신청'";
@@ -169,6 +253,32 @@ public class DatabaseManager {
             int rowsAffected = stmt.executeUpdate();
 
             if (rowsAffected > 0) {
+                // 2. 대여 로그 추가
+                sql = "INSERT INTO DB2025_RENT_LOG " +
+                        "(rent_id, item_id, user_id, admin_id, previous_status, current_status, " +
+                        "log_date, borrow_date, due_date, note, " +
+                        "item_name, item_category, user_name, user_dep, admin_name, " +
+                        "available_quantity, total_quantity, operation_type, created_by) " +
+                        "VALUES (?, ?, ?, ?, '대여신청', '대여중', CURRENT_TIMESTAMP, ?, ?, '출고 완료 처리', " +
+                        "?, ?, ?, ?, ?, ?, ?, '수정', ?)";
+
+                stmt = conn.prepareStatement(sql);
+                stmt.setInt(1, rentId);
+                stmt.setInt(2, itemId);
+                stmt.setInt(3, userId);
+                stmt.setInt(4, adminId);
+                stmt.setDate(5, borrowDate);
+                stmt.setDate(6, dueDate);
+                stmt.setString(7, itemName);
+                stmt.setString(8, category);
+                stmt.setString(9, userName);
+                stmt.setString(10, userDep);
+                stmt.setString(11, adminName);
+                stmt.setInt(12, availableQuantity);
+                stmt.setInt(13, totalQuantity);
+                stmt.setString(14, adminName);
+
+                stmt.executeUpdate();
                 conn.commit(); // 모든 작업 성공 시 커밋
                 return true;
             } else {
@@ -186,21 +296,7 @@ public class DatabaseManager {
             e.printStackTrace();
             return false;
         } finally {
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true); // 자동 커밋 모드 복원
-                    conn.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
+            closeResources(conn, stmt, rs);
         }
     }
 
@@ -208,10 +304,53 @@ public class DatabaseManager {
     public boolean processDeleteRent(int rentId) {
         Connection conn = null;
         PreparedStatement stmt = null;
+        ResultSet rs = null;
 
         try {
             conn = getConnection();
             conn.setAutoCommit(false); // 트랜잭션 시작
+        
+            // 삭제할 대여 정보 조회
+            String infoSql = "SELECT r.item_id, r.user_id, r.borrow_date, r.rent_status, " +
+                         "i.item_name, i.category, i.available_quantity, i.quantity, " +
+                         "u.user_name, u.user_dep " +
+                         "FROM DB2025_RENT r " +
+                         "JOIN DB2025_ITEMS i ON r.item_id = i.item_id " +
+                         "JOIN DB2025_USER u ON r.user_id = u.user_id " +
+                         "WHERE r.rent_id = ?";
+
+            stmt = conn.prepareStatement(infoSql);
+            stmt.setInt(1, rentId);
+            rs = stmt.executeQuery();
+
+            if (!rs.next()) {
+                conn.rollback();
+                return false; // 해당 대여 정보가 없음
+            }
+
+            int itemId = rs.getInt("item_id");
+            int userId = rs.getInt("user_id");
+            Date borrowDate = rs.getDate("borrow_date");
+            String rentStatus = rs.getString("rent_status");
+            String itemName = rs.getString("item_name");
+            String category = rs.getString("category");
+            String userName = rs.getString("user_name");
+            String userDep = rs.getString("user_dep");
+            int availableQuantity = rs.getInt("available_quantity");
+            int totalQuantity = rs.getInt("quantity");
+
+            // 현재 관리자 정보 가져오기
+            int adminId = SessionManager.getInstance().getUserId();
+            String adminName = "";
+
+            String adminSql = "SELECT user_name FROM DB2025_USER WHERE user_id = ?";
+            stmt = conn.prepareStatement(adminSql);
+            stmt.setInt(1, adminId);
+            ResultSet adminRs = stmt.executeQuery();
+            if (adminRs.next()) {
+                adminName = adminRs.getString("user_name");
+            }
+            adminRs.close();
 
             // 1. 대여 기록 삭제
             String sql = "DELETE FROM DB2025_RENT WHERE rent_id = ?";
@@ -221,12 +360,38 @@ public class DatabaseManager {
 
             if (rowsAffected > 0) {
                 // 2. 물품 수량 증가
-                sql = "UPDATE DB2025_ITEMS SET available_quantity = available_quantity + 1 " +
-                        "WHERE item_id = (SELECT item_id FROM DB2025_RENT WHERE rent_id = ?)";
+                sql = "UPDATE DB2025_ITEMS SET available_quantity = available_quantity + 1 WHERE item_id = ?";
                 stmt = conn.prepareStatement(sql);
-                stmt.setInt(1, rentId);
+                stmt.setInt(1, itemId);
                 int rowsAffected2 = stmt.executeUpdate();
+
                 if (rowsAffected2 > 0) {
+                    // 3. 대여 로그 추가
+                    sql = "INSERT INTO DB2025_RENT_LOG " +
+                            "(rent_id, item_id, user_id, admin_id, previous_status, current_status, " +
+                            "log_date, borrow_date, note, " +
+                            "item_name, item_category, user_name, user_dep, admin_name, " +
+                            "available_quantity, total_quantity, operation_type, created_by) " +
+                            "VALUES (?, ?, ?, ?, ?, NULL, CURRENT_TIMESTAMP, ?, '출고 취소 및 대여 기록 삭제', " +
+                            "?, ?, ?, ?, ?, ?, ?, '삭제', ?)";
+
+                    stmt = conn.prepareStatement(sql);
+                    stmt.setInt(1, rentId);
+                    stmt.setInt(2, itemId);
+                    stmt.setInt(3, userId);
+                    stmt.setInt(4, adminId);
+                    stmt.setString(5, rentStatus);
+                    stmt.setDate(6, borrowDate);
+                    stmt.setString(7, itemName);
+                    stmt.setString(8, category);
+                    stmt.setString(9, userName);
+                    stmt.setString(10, userDep);
+                    stmt.setString(11, adminName);
+                    stmt.setInt(12, availableQuantity + 1); // 증가된 수량 반영
+                    stmt.setInt(13, totalQuantity);
+                    stmt.setString(14, adminName);
+
+                    stmt.executeUpdate();
                     conn.commit(); // 모든 작업 성공 시 커밋
                     return true;
                 }
@@ -244,21 +409,7 @@ public class DatabaseManager {
             e.printStackTrace();
             return false;
         } finally {
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true); // 자동 커밋 모드 복원
-                    conn.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
+            closeResources(conn, stmt, rs);
         }
     }
 
@@ -305,13 +456,30 @@ public class DatabaseManager {
             conn = getConnection();
             conn.setAutoCommit(false); // 트랜잭션 시작
 
-            // 1. 대여가능수량 확인
-            String availableCheckSql = "SELECT available_quantity FROM DB2025_ITEMS WHERE item_id = ?";
-            stmt = conn.prepareStatement(availableCheckSql);
+            // 물품 및 사용자 정보 조회
+            String getInfoSql = "SELECT i.item_name, i.category, i.available_quantity, i.quantity, " +
+                           "u.user_name, u.user_dep " +
+                           "FROM DB2025_ITEMS i, DB2025_USER u " +
+                           "WHERE i.item_id = ? AND u.user_id = ?";
+            stmt = conn.prepareStatement(getInfoSql);
             stmt.setInt(1, itemId);
+            stmt.setInt(2, userId);
             rs = stmt.executeQuery();
-            
-            if (rs.next() && rs.getInt("available_quantity") > 0) {
+
+            if (!rs.next()) {
+                conn.rollback();
+                return 4; // 물품 또는 사용자 정보가 없음
+            }
+
+            String itemName = rs.getString("item_name");
+            String category = rs.getString("category");
+            String userName = rs.getString("user_name");
+            String userDep = rs.getString("user_dep");
+            int availableQuantity = rs.getInt("available_quantity");
+            int totalQuantity = rs.getInt("quantity");
+
+            // 1. 대여가능수량 확인
+            if (availableQuantity > 0) {
                 conn.rollback();
                 return 1; // 대여가능수량이 있는 경우 예약 불가
             }
@@ -322,10 +490,10 @@ public class DatabaseManager {
             stmt.setInt(1, itemId);
             stmt.setInt(2, userId);
             rs = stmt.executeQuery();
-            
+
             if (rs.next() && rs.getInt(1) > 0) {
                 conn.rollback();
-                return 2; // 이미 예약한 내역이, 있음
+                return 2; // 이미 예약한 내역이 있음
             }
 
             // 3. 연체 중인지 확인
@@ -333,7 +501,7 @@ public class DatabaseManager {
             stmt = conn.prepareStatement(overdueCheckSql);
             stmt.setInt(1, userId);
             rs = stmt.executeQuery();
-            
+
             if (rs.next() && rs.getInt(1) > 0) {
                 conn.rollback();
                 return 3; // 연체 중인 경우, 예약 불가
@@ -345,8 +513,37 @@ public class DatabaseManager {
             stmt.setInt(1, userId);
             stmt.setInt(2, itemId);
             int rowsAffected = stmt.executeUpdate();
-            
+
             if (rowsAffected > 0) {
+                // 5. 예약 ID 가져오기
+                int reservationId = 0;
+                String idSql = "SELECT LAST_INSERT_ID() as reservation_id";
+                stmt = conn.prepareStatement(idSql);
+                rs = stmt.executeQuery();
+                if (rs.next()) {
+                    reservationId = rs.getInt("reservation_id");
+                }
+
+                // 6. 예약 로그 추가
+                String logSql = "INSERT INTO DB2025_RENT_LOG " +
+                        "(item_id, user_id, current_status, log_date, note, " +
+                        "item_name, item_category, user_name, user_dep, " +
+                        "available_quantity, total_quantity, operation_type, created_by) " +
+                        "VALUES (?, ?, '대여가능', CURRENT_TIMESTAMP, '예약 신청', " +
+                        "?, ?, ?, ?, ?, ?, '생성', ?)";
+
+                stmt = conn.prepareStatement(logSql);
+                stmt.setInt(1, itemId);
+                stmt.setInt(2, userId);
+                stmt.setString(3, itemName);
+                stmt.setString(4, category);
+                stmt.setString(5, userName);
+                stmt.setString(6, userDep);
+                stmt.setInt(7, availableQuantity);
+                stmt.setInt(8, totalQuantity);
+                stmt.setString(9, "사용자");
+
+                stmt.executeUpdate();
                 conn.commit(); // 트랜잭션 완료
                 return 0; // 성공
             } else {
