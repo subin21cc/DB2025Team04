@@ -252,6 +252,15 @@ public class MainWindow extends JFrame {
         help.add(rentHelp);
         help.add(reserveHelp);
 
+        JMenuItem viewLog = new JMenuItem("대여 로그 보기");
+        viewLog.addActionListener(e -> {
+            // 대여 로그를 보여주는 대화상자 생성 및 표시
+            RentLogDialog rentLogDialog = new RentLogDialog(this, "대여 로그");
+            rentLogDialog.setVisible(true);
+        });
+        help.add(viewLog);
+
+
         JMenu refreshItem = new JMenu("새로고침");
         refreshItem.addActionListener(e -> refreshCurrentTab());
 
