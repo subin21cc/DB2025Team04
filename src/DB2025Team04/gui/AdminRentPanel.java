@@ -238,6 +238,14 @@ public class AdminRentPanel extends JPanel {
                 }
                 row.add(returnDate);
                 row.add(rs.getString("rent_status"));
+                if ("연체중".equals(rs.getString("rent_status"))) {
+                    LocalDate borrowDate = rs.getDate("borrow_date").toLocalDate();
+                    LocalDate returnDateLocal = rs.getDate("return_date") != null ? rs.getDate("return_date").toLocalDate() : LocalDate.now();
+                    long daysElapsed = java.time.temporal.ChronoUnit.DAYS.between(borrowDate, returnDateLocal);
+                    row.add(daysElapsed);
+                } else {
+                    row.add("-");
+                }
 
                 tableModel.addRow(row);
             }
