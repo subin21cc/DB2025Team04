@@ -244,11 +244,12 @@ SELECT
       ORDER BY I.item_name
       SEPARATOR ', '
     ) AS rented_items
-FROM DB2025_USER U
-         LEFT JOIN DB2025_RENT R
-                   ON U.user_id = R.user_id
-         LEFT JOIN DB2025_ITEMS I
-                   ON R.item_id = I.item_id
+FROM DB2025_USER U,
+     DB2025_RENT R,
+     DB2025_ITEMS I
+WHERE U.user_id = R.user_id
+AND R.item_id = I.item_id
+AND R.rent_status IN ('대여중', '연체중') -- 대여 중이거나 연체 중인 상태만 포함
 GROUP BY
     U.user_id,
     U.user_name
