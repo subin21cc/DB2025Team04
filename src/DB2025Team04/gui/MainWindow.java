@@ -83,7 +83,7 @@ public class MainWindow extends JFrame {
                         case 2: // 대여 현황 탭
                             adminRentPanel.loadItemList();
                             break;
-                        case 3:
+                        case 3: // 예약 현황 탭
                             adminReservationPanel.loadItemList();
                             break;
                     }

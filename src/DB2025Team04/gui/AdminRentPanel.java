@@ -25,9 +25,7 @@ public class AdminRentPanel extends JPanel {
     private DefaultTableModel tableModel;
     private JRadioButton detailRadio;
     private JRadioButton userSummaryRadio;
-    private JButton rentButton;
-    private JButton reservationButton;
-    private JButton deleteButton;
+    private JButton returnButton;
     private JCheckBox allCheckBox;
     private JCheckBox checkBox1;
     private JCheckBox checkBox2;
@@ -131,9 +129,48 @@ public class AdminRentPanel extends JPanel {
         };
         itemTable = new JTable(tableModel);
         itemTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        itemTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int selectedRow = itemTable.getSelectedRow();
+                returnButton.setEnabled(selectedRow != -1 && detailRadio.isSelected() &&
+                        ("대여중".equals(tableModel.getValueAt(selectedRow, 6)) ||
+                        "연체중".equals(tableModel.getValueAt(selectedRow, 6))));
+            }
+        });
+
+        // 반납처리 버튼
+        JPanel buttonPanel = new JPanel();
+        returnButton = new JButton("반납처리");
+        returnButton.setEnabled(false); // 초기 상태에서는 버튼 비활성화
+        buttonPanel.add(returnButton);
+        returnButton.addActionListener(e -> {
+            int selectedRow = itemTable.getSelectedRow();
+            if (selectedRow != -1) {
+                int rentId = (int) tableModel.getValueAt(selectedRow, 0);
+                String status = (String) tableModel.getValueAt(selectedRow, 6);
+                if ("대여중".equals(status) || "연체중".equals(status)) {
+                    int option = JOptionPane.showConfirmDialog(this,
+                            "반납처리 하시겠습니까?", "반납처리 확인",
+                            JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                    if (option == JOptionPane.YES_OPTION) {
+                        if (DatabaseManager.getInstance().processReturn(rentId)) {
+                            JOptionPane.showMessageDialog(this, "반납처리가 완료되었습니다.");
+                            loadItemList(); // Refresh the item list
+                        } else {
+                            JOptionPane.showMessageDialog(this, "반납 처리 중 오류가 발생했습니다.", "오류", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(this, "대여중 또는 연체중인 물품만 반납처리 가능합니다.", "경고", JOptionPane.WARNING_MESSAGE);
+                }
+
+
+            }
+        });
 
         JScrollPane scrollPane = new JScrollPane(itemTable);
         add(scrollPane, BorderLayout.CENTER);
+        add(buttonPanel, BorderLayout.SOUTH);
     }
 
     public void loadItemList() {

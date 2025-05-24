@@ -17,6 +17,9 @@ public class LoginWindow extends JFrame {
     private JRadioButton adminRadio;
     
     public LoginWindow() {
+        // Login을 할 때마다 자동 수행동작을 진행함
+        DatabaseManager.getInstance().processAutoTask();
+
         setTitle("로그인");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(300, 250);
