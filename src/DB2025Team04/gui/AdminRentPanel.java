@@ -42,7 +42,7 @@ public class AdminRentPanel extends JPanel {
 
     private void initComponents() {
         JPanel topPanel = new JPanel();
-        topPanel.setLayout(new GridLayout(2, 1) );
+        topPanel.setLayout(new GridLayout(2, 1));
 
         JPanel radioPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));

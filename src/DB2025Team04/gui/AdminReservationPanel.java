@@ -7,6 +7,8 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.event.ItemListener;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -24,14 +26,75 @@ import java.util.Vector;
 public class AdminReservationPanel extends JPanel {
     private JTable itemTable;
     private DefaultTableModel tableModel;
+    private JTextField searchField;
+    private JComboBox<String> searchTypeCombo;
+    private JTextField dateSearchField;
+
 
     public AdminReservationPanel() {
         setLayout(new BorderLayout());
         initComponents();
-//        loadItemList();
     }
 
     private void initComponents() {
+        JPanel topPanel = new JPanel();
+        topPanel.setLayout(new GridLayout(2, 1));
+
+        // 검색 패널
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel dateSearchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+
+        searchField = new JTextField(20);
+        searchTypeCombo = new JComboBox<>(new String[] {"ID", "대여자", "대여물품"});
+
+        // 예약일 검색 필드
+        dateSearchField = new JTextField("예: 2025-05-17", 20);
+        dateSearchField.setForeground(Color.GRAY);
+        dateSearchField.addFocusListener(new FocusAdapter() {
+            public void focusGained(FocusEvent e) {
+                if (dateSearchField.getText().equals("예: 2025-05-17")) {
+                    dateSearchField.setText("");
+                    dateSearchField.setForeground(Color.BLACK);
+                }
+            }
+
+            public void focusLost(FocusEvent e) {
+                if (dateSearchField.getText().isEmpty()) {
+                    dateSearchField.setForeground(Color.GRAY);
+                    dateSearchField.setText("예: 2025-05-17");
+                }
+            }
+        });
+
+        // 통합 검색 버튼
+        JButton searchButton = new JButton("검색");
+        searchButton.addActionListener(e -> {
+            loadItemList();
+        });
+
+        // 통합 초기화 버튼
+        JButton resetButton = new JButton("검색 초기화");
+        resetButton.addActionListener(e -> {
+            searchField.setText("");
+            dateSearchField.setText("예: 2025-05-17");
+            dateSearchField.setForeground(Color.GRAY);
+            loadItemList();
+        });
+
+        // 컴포넌트 배치
+        searchPanel.add(new JLabel("검색 항목:"));
+        searchPanel.add(searchTypeCombo);
+        searchPanel.add(searchField);
+        searchPanel.add(searchButton);
+        searchPanel.add(resetButton);
+
+        dateSearchPanel.add(new JLabel("예약일 검색:"));
+        dateSearchPanel.add(dateSearchField);
+
+        topPanel.add(searchPanel);
+        topPanel.add(dateSearchPanel);
+        add(topPanel, BorderLayout.NORTH);
+
         // Table
         String[] columns = {" ", "ID", "대여자", "대여물품", "예약일"};
         tableModel = new DefaultTableModel(columns, 0) {
@@ -56,8 +119,28 @@ public class AdminReservationPanel extends JPanel {
             conn = DatabaseManager.getInstance().getConnection();
 
             String sql = "SELECT reservation_id, user_id, user_name, item_name, reserve_date " +
-                    "FROM VIEW_RESERVATION_OVERVIEW " +
-                    "ORDER BY reservation_id ";
+                    "FROM VIEW_RESERVATION_OVERVIEW WHERE 1=1 ";
+            String keyword = searchField.getText().trim();
+            String date = dateSearchField.getText().trim();
+            if (!keyword.isEmpty()) {
+                switch (searchTypeCombo.getSelectedIndex()) {
+                    case 0:
+                        sql += "AND CAST(user_id AS CHAR) LIKE '%" + keyword + "%' ";
+                        break;
+                    case 1:
+                        sql += "AND user_name LIKE '%" + keyword + "%' ";
+                        break;
+                    case 2:
+                        sql += "AND item_name LIKE '%" + keyword + "%' ";
+                        break;
+                }
+            }
+
+            // 예약일 검색 조건
+            if (!date.isEmpty()) {
+                sql += "AND DATE_FORMAT(reserve_date, '%Y-%m-%d') LIKE '%" + date + "%' ";
+            }
+            sql += "ORDER BY reservation_id";
 
             stmt = conn.prepareStatement(sql);
             rs = stmt.executeQuery();
@@ -83,4 +166,17 @@ public class AdminReservationPanel extends JPanel {
             DatabaseManager.getInstance().closeResources(conn, stmt, rs);
         }
     }
+
+    /*private void searchItems() {
+        isSearching = true;
+        loadItemList();
+    }
+
+    private void resetSearch() {
+        isSearching = false;
+        searchField.setText("");
+        dateSearchField.setText("예: 2025-05-17");  // 힌트로 초기화
+        dateSearchField.setForeground(Color.GRAY); // 색도 원래대로
+        loadItemList();
+    }*/
 }
