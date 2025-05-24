@@ -33,7 +33,7 @@ public class AdminReservationPanel extends JPanel {
 
     private void initComponents() {
         // Table
-        String[] columns = {"ID", "분류", "대여물품", "대여자", "예약일"};
+        String[] columns = {" ", "ID", "대여자", "대여물품", "예약일"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -55,13 +55,11 @@ public class AdminReservationPanel extends JPanel {
         try {
             conn = DatabaseManager.getInstance().getConnection();
 
-            String sql = "SELECT r.rent_id, category, item_name, borrow_date, u.user_name " +
-                    "FROM DB2025_ITEMS i, DB2025_RENT r, DB2025_USER u " +
-                    "WHERE i.item_id = r.item_id AND r.user_id = u.user_id AND r.rent_status='대여신청' " +
-                    "ORDER BY borrow_date DESC";
+            String sql = "SELECT reservation_id, user_id, user_name, item_name, reserve_date " +
+                    "FROM VIEW_RESERVATION_OVERVIEW " +
+                    "ORDER BY reservation_id ";
 
             stmt = conn.prepareStatement(sql);
-//            stmt.setInt(1, SessionManager.getInstance().getUserId());
             rs = stmt.executeQuery();
 
             tableModel.setRowCount(0);
@@ -69,23 +67,16 @@ public class AdminReservationPanel extends JPanel {
 
             while (rs.next()) {
                 Vector<Object> row = new Vector<>();
-                row.add(rs.getInt("rent_id"));
-                row.add(rs.getString("category"));
-                row.add(rs.getString("item_name"));
+                row.add(rs.getInt("reservation_id"));
+                row.add(rs.getInt("user_id"));
                 row.add(rs.getString("user_name"));
-                row.add(dateFormat.format(rs.getDate("borrow_date")));
-                String returnDate;
-                try {
-                    returnDate = dateFormat.format(rs.getString("return_date"));
-                } catch (Exception e) {
-                    returnDate = "-";
-                }
-                row.add(returnDate);
+                row.add(rs.getString("item_name"));
+                row.add(dateFormat.format(rs.getDate("reserve_date")));
 
                 tableModel.addRow(row);
             }
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error loading my rent status: " + e.getMessage(),
+            JOptionPane.showMessageDialog(this, "Error loading my reservation status: " + e.getMessage(),
                     "Database Error", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         } finally {
