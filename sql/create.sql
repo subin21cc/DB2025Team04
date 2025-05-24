@@ -292,18 +292,51 @@ INSERT INTO DB2025_ITEMS (item_id, item_name, quantity, available_quantity, cate
     (3009, '컴퓨터사인펜', 12,  12, '필기구');
 
 -- 대여 데이터
+-- 현재 날짜 기준으로 다양한 대여 상태의 데이터 삽입
 INSERT INTO DB2025_RENT (item_id, user_id, borrow_date, return_date, rent_status) VALUES
-    (3001, 2025001, '2025-05-01', NULL, '대여중'),
-    (3002, 2025002, '2025-04-25', '2025-05-02', '반납완료'),
-    (3004, 2025003, '2025-04-20', NULL, '연체중'),
-    (3005, 2025005, '2025-05-10', NULL, '대여신청'),
-    (3006, 2025006, '2025-05-05', '2025-05-12', '반납완료'),
-    (3007, 2025007, '2025-05-12', NULL, '대여중'),
-    (3008, 2025008, '2025-04-28', NULL, '연체중'),
-    (3009, 2025009, '2025-05-15', NULL, '대여신청'),
-    (3003, 2025010, '2025-05-10', '2025-05-18', '반납완료'),
-    (3003, 2025004, '2025-05-14', NULL, '대여중'),
-    (3002, 2025008, '2025-04-22', '2025-05-01', '연체반납'),
-    (3006, 2025002, '2025-05-03', NULL, '대여중');
+    -- 1. 대여중 상태: 대여일이 현재 날짜로부터 3일 전, 아직 반납되지 않음
+    (3001, 2025001, DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY), NULL, '대여중'),
+
+    -- 2. 반납완료 상태: 대여일이 10일 전, 반납일이 3일 전
+    (3002, 2025002, DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY), '반납완료'),
+
+    -- 3. 연체중 상태: 대여일이 10일 전 (대여 기간은 7일이므로 연체중)
+    (3004, 2025003, DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), NULL, '연체중'),
+
+    -- 4. 대여신청 상태: 대여일이 현재 날짜
+    (3005, 2025005, CURRENT_DATE, NULL, '대여신청'),
+
+    -- 5. 반납완료 상태: 대여일이 15일 전, 반납일이 8일 전
+    (3006, 2025006, DATE_SUB(CURRENT_DATE, INTERVAL 15 DAY), DATE_SUB(CURRENT_DATE, INTERVAL 8 DAY), '반납완료'),
+
+    -- 6. 대여중 상태: 대여일이 2일 전
+    (3007, 2025007, DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), NULL, '대여중'),
+
+    -- 7. 연체중 상태: 대여일이 8일 전 (1일 연체)
+    (3008, 2025008, DATE_SUB(CURRENT_DATE, INTERVAL 8 DAY), NULL, '연체중'),
+
+    -- 8. 대여신청 상태: 대여일이 내일 (미래 날짜)
+    (3009, 2025009, DATE_ADD(CURRENT_DATE, INTERVAL 1 DAY), NULL, '대여신청'),
+
+    -- 9. 반납완료 상태: 대여일이 20일 전, 반납일이 10일 전
+    (3003, 2025010, DATE_SUB(CURRENT_DATE, INTERVAL 20 DAY), DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), '반납완료'),
+
+    -- 10. 대여중 상태: 대여일이 5일 전
+    (3003, 2025004, DATE_SUB(CURRENT_DATE, INTERVAL 5 DAY), NULL, '대여중'),
+
+    -- 11. 연체반납 상태: 대여일이 20일 전, 반납일이 10일 전 (13일이 연체 후 반납)
+    (3002, 2025008, DATE_SUB(CURRENT_DATE, INTERVAL 20 DAY), DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), '연체반납'),
+
+    -- 12. 대여중 상태: 대여일이 4일 전
+    (3006, 2025002, DATE_SUB(CURRENT_DATE, INTERVAL 4 DAY), NULL, '대여중'),
+
+    -- 13. 곧 연체될 상태: 대여일이 정확히 7일 전 (오늘 반납해야 함)
+    (3001, 2025010, DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY), NULL, '대여중'),
+
+    -- 14. 오늘 막 대여 신청된 상태
+    (3004, 2025001, CURRENT_DATE, NULL, '대여신청'),
+
+    -- 15. 내일 연체될 예정인 항목
+    (3005, 2025004, DATE_SUB(CURRENT_DATE, INTERVAL 6 DAY), NULL, '대여중');
 
 
