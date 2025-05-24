@@ -294,49 +294,80 @@ INSERT INTO DB2025_ITEMS (item_id, item_name, quantity, available_quantity, cate
 -- 대여 데이터
 -- 현재 날짜 기준으로 다양한 대여 상태의 데이터 삽입
 INSERT INTO DB2025_RENT (item_id, user_id, borrow_date, return_date, rent_status) VALUES
-    -- 1. 대여중 상태: 대여일이 현재 날짜로부터 3일 전, 아직 반납되지 않음
+    -- 1. 대여 기간 내 - 정상 대여중
     (3001, 2025001, DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY), NULL, '대여중'),
 
-    -- 2. 반납완료 상태: 대여일이 10일 전, 반납일이 3일 전
+    -- 2. 정상 반납 완료
     (3002, 2025002, DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY), '반납완료'),
 
-    -- 3. 연체중 상태: 대여일이 10일 전 (대여 기간은 7일이므로 연체중)
+    -- 3. 연체중 상태 - 이미 처리된 상태
     (3004, 2025003, DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), NULL, '연체중'),
 
-    -- 4. 대여신청 상태: 대여일이 현재 날짜
+    -- 4. 대여신청 상태
     (3005, 2025005, CURRENT_DATE, NULL, '대여신청'),
 
-    -- 5. 반납완료 상태: 대여일이 15일 전, 반납일이 8일 전
+    -- 5. 정상 반납 완료 - 예약자가 대여할 물품
     (3006, 2025006, DATE_SUB(CURRENT_DATE, INTERVAL 15 DAY), DATE_SUB(CURRENT_DATE, INTERVAL 8 DAY), '반납완료'),
 
-    -- 6. 대여중 상태: 대여일이 2일 전
+    -- 6. 대여중 - 대여 불가 사용자
     (3007, 2025007, DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), NULL, '대여중'),
 
-    -- 7. 연체중 상태: 대여일이 8일 전 (1일 연체)
+    -- 7. 연체중 상태 - 이미 처리된 상태
     (3008, 2025008, DATE_SUB(CURRENT_DATE, INTERVAL 8 DAY), NULL, '연체중'),
 
-    -- 8. 대여신청 상태: 대여일이 내일 (미래 날짜)
+    -- 8. 대여신청 상태 - 미래 날짜
     (3009, 2025009, DATE_ADD(CURRENT_DATE, INTERVAL 1 DAY), NULL, '대여신청'),
 
-    -- 9. 반납완료 상태: 대여일이 20일 전, 반납일이 10일 전
+    -- 9. 정상 반납 완료
     (3003, 2025010, DATE_SUB(CURRENT_DATE, INTERVAL 20 DAY), DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), '반납완료'),
 
-    -- 10. 대여중 상태: 대여일이 5일 전
+    -- 10. 정상 대여중
     (3003, 2025004, DATE_SUB(CURRENT_DATE, INTERVAL 5 DAY), NULL, '대여중'),
 
-    -- 11. 연체반납 상태: 대여일이 20일 전, 반납일이 10일 전 (13일이 연체 후 반납)
+    -- 11. 연체 후 반납 완료
     (3002, 2025008, DATE_SUB(CURRENT_DATE, INTERVAL 20 DAY), DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), '연체반납'),
 
-    -- 12. 대여중 상태: 대여일이 4일 전
+    -- 12. 정상 대여중
     (3006, 2025002, DATE_SUB(CURRENT_DATE, INTERVAL 4 DAY), NULL, '대여중'),
 
-    -- 13. 곧 연체될 상태: 대여일이 정확히 7일 전 (오늘 반납해야 함)
+    -- 13. [테스트 케이스 1] 오늘 연체될 항목 (정확히 7일 지난 상태)
+    -- processAutoTask에서 연체중으로 변경될 예정
     (3001, 2025010, DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY), NULL, '대여중'),
 
-    -- 14. 오늘 막 대여 신청된 상태
+    -- 14. 대여신청 상태 - 오늘 신청
     (3004, 2025001, CURRENT_DATE, NULL, '대여신청'),
 
-    -- 15. 내일 연체될 예정인 항목
-    (3005, 2025004, DATE_SUB(CURRENT_DATE, INTERVAL 6 DAY), NULL, '대여중');
+    -- 15. [테스트 케이스 2] 내일 연체 예정인 항목 - 이건 연체로 처리되지 않아야 함
+    (3005, 2025004, DATE_SUB(CURRENT_DATE, INTERVAL 6 DAY), NULL, '대여중'),
 
+    -- 16. [테스트 케이스 3] 연체로 처리될 항목 (8일 전 대여, 아직 '대여중' 상태)
+    -- processAutoTask 실행 시 '연체중'으로 변경되어야 함
+    (3001, 2025002, DATE_SUB(CURRENT_DATE, INTERVAL 8 DAY), NULL, '대여중'),
 
+    -- 17. [테스트 케이스 4] 심각한 연체 상태 (15일 전 대여, 아직 '대여중' 상태)
+    -- processAutoTask 실행 시 '연체중'으로 변경되고, 사용자가 '대여불가' 상태로 변경되어야 함
+    (3002, 2025005, DATE_SUB(CURRENT_DATE, INTERVAL 15 DAY), NULL, '대여중');
+
+-- 예약 데이터 추가 - 자동 처리 테스트를 위한 예약 상태
+INSERT INTO DB2025_RESERVATION (user_id, item_id, reserve_date) VALUES
+    -- 1. [테스트 케이스 5] 대여가능 수량이 0인 물품에 대한 예약 (물품 id 3004)
+    -- 연체 처리될 사용자(2025005)의 예약 - processAutoTask 실행 시 취소되어야 함
+    (2025005, 3004, DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY)),
+
+    -- 2. [테스트 케이스 6] 다른 사용자의 예약 - 정상 유지되어야 함
+    (2025006, 3004, DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY)),
+
+    -- 3. [테스트 케이스 7] 연체 처리될 사용자(2025005)의 다른 예약 - 모두 취소되어야 함
+    (2025005, 3003, CURRENT_DATE),
+
+    -- 4. [테스트 케이스 8] 대여가능 수량이 있는 물품에 대한 예약
+    -- processAutoTask 실행 시 대여신청으로 전환되어야 함
+    (2025009, 3001, DATE_SUB(CURRENT_DATE, INTERVAL 5 DAY)),
+
+    -- 5. [테스트 케이스 9] 대여불가 사용자(2025007)의 예약
+    -- processAutoTask 실행 시 취소되어야 함
+    (2025007, 3005, DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY)),
+
+    -- 6. [테스트 케이스 10] 대여가능 수량이 없지만 예약 순서가 뒤인 경우
+    -- 유지되어야 함
+    (2025001, 3004, DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY));
