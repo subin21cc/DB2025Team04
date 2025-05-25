@@ -201,7 +201,7 @@ public class AdminUserPanel extends JPanel {
                         "CASE WHEN a.admin_id IS NOT NULL THEN 'O' ELSE 'X' END AS is_admin " +
                         "FROM DB2025_USER u " +
                         "LEFT JOIN DB2025_ADMIN a ON u.user_id = a.user_id ";
-                        
+
             if (isSearching) {
                 switch (searchTypeCombo.getSelectedIndex()) {
                     case 0: // ID
@@ -215,7 +215,7 @@ public class AdminUserPanel extends JPanel {
                         break;
                 }
             }
-            
+
             sql += "ORDER BY u.user_id";
 
             stmt = conn.prepareStatement(sql);
