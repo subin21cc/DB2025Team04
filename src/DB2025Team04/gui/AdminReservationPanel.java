@@ -118,39 +118,37 @@ public class AdminReservationPanel extends JPanel {
         try {
             conn = DatabaseManager.getInstance().getConnection();
 
-            StringBuilder sql = new StringBuilder("SELECT reservation_id, user_id, user_name, item_name, reserve_date " +
-                                                  "FROM VIEW_RESERVATION_OVERVIEW WHERE 1=1 ");
+            String sql = "SELECT reservation_id, user_id, user_name, item_name, reserve_date " +
+                         "FROM VIEW_RESERVATION_OVERVIEW WHERE 1=1";
             String keyword = searchField.getText().trim();
             String date = dateSearchField.getText().trim();
-            List<String> conditions = new ArrayList<>();
-            List<String> parameters = new ArrayList<>();
 
             if (!keyword.isEmpty()) {
                 switch (searchTypeCombo.getSelectedIndex()) {
                     case 0:
-                        sql.append(" AND CAST(user_id AS CHAR) LIKE ? ");
-                        parameters.add("%" + keyword + "%");
+                        sql += " AND CAST(user_id AS CHAR) LIKE ?";
                         break;
                     case 1:
-                        sql.append(" AND user_name LIKE ? ");
-                        parameters.add("%" + keyword + "%");
+                        sql += " AND user_name LIKE ?";
                         break;
                     case 2:
-                        sql.append(" AND item_name LIKE ? ");
-                        parameters.add("%" + keyword + "%");
+                        sql += " AND item_name LIKE ?";
                         break;
                 }
             }
             // 예약일 검색 조건
             if (!date.isEmpty() && !date.equals("예: 2025-05-17")) {
-                sql.append(" AND DATE_FORMAT(reserve_date, '%Y-%m-%d') LIKE ? ");
-                parameters.add("%" + date + "%");
+                sql += " AND DATE_FORMAT(reserve_date, '%Y-%m-%d') LIKE ?";
 }
-            sql.append(" ORDER BY reservation_id");
+            sql += " ORDER BY reservation_id";
+            stmt = conn.prepareStatement(sql);
 
-            stmt = conn.prepareStatement(sql.toString());
-            for (int i = 0; i < parameters.size(); i++) {
-                stmt.setString(i + 1, parameters.get(i));
+            int paramIndex = 1;
+            if (!keyword.isEmpty()) {
+                stmt.setString(paramIndex++, "%" + keyword + "%");
+            }
+            if (!date.isEmpty() && !date.equals("예: 2025-05-17")) {
+                stmt.setString(paramIndex, "%" + date + "%");
             }
             rs = stmt.executeQuery();
 
@@ -175,17 +173,4 @@ public class AdminReservationPanel extends JPanel {
             DatabaseManager.getInstance().closeResources(conn, stmt, rs);
         }
     }
-
-    /*private void searchItems() {
-        isSearching = true;
-        loadItemList();
-    }
-
-    private void resetSearch() {
-        isSearching = false;
-        searchField.setText("");
-        dateSearchField.setText("예: 2025-05-17");  // 힌트로 초기화
-        dateSearchField.setForeground(Color.GRAY); // 색도 원래대로
-        loadItemList();
-    }*/
 }
