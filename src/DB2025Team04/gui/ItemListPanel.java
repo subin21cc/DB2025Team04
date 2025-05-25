@@ -32,7 +32,7 @@ public class ItemListPanel extends JPanel {
         // Search panel
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         searchField = new JTextField(20);
-        searchTypeCombo = new JComboBox<>(new String[] {"분류", "이름"});
+        searchTypeCombo = new JComboBox<>(new String[] {"분류", "물품이름"});
         JButton searchButton = new JButton("검색");
         searchButton.addActionListener(e -> searchItems());
         JButton resetButton = new JButton("검색 초기화");
@@ -45,7 +45,7 @@ public class ItemListPanel extends JPanel {
         searchPanel.add(resetButton);
 
         // Table
-        String[] columns = {"ID", "분류", "이름", "전체수량", "대여가능수량"};
+        String[] columns = {"ID", "분류", "물품이름", "전체수량", "대여가능수량"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -258,19 +258,26 @@ public class ItemListPanel extends JPanel {
 
             String sql = "SELECT item_id, item_name, quantity, available_quantity, category " +
                     "FROM DB2025_ITEMS ";
+            boolean hasCondition = false;
             if (isSearching) {
                 switch (searchTypeCombo.getSelectedIndex()) {
                     case 0:
-                        sql += "WHERE category LIKE '%" + searchField.getText() + "%' ";
+                        sql += "WHERE category LIKE ? ";
+                        hasCondition = true;
                         break;
                     case 1:
-                        sql += "WHERE item_name LIKE '%" + searchField.getText() + "%' ";
+                        sql += "WHERE item_name LIKE ? ";
+                        hasCondition = true;
                         break;
                 }
             }
             sql += "ORDER BY category, item_name";
 
             stmt = conn.prepareStatement(sql);
+            if (hasCondition) {
+                stmt.setString(1, "%" + searchField.getText().trim() + "%");
+            }
+
             rs = stmt.executeQuery();
 
             tableModel.setRowCount(0);
