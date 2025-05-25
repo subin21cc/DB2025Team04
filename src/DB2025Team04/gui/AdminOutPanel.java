@@ -112,7 +112,6 @@ public class AdminOutPanel extends JPanel {
                     "ORDER BY borrow_date DESC";
 
             stmt = conn.prepareStatement(sql);
-//            stmt.setInt(1, SessionManager.getInstance().getUserId());
             rs = stmt.executeQuery();
 
             tableModel.setRowCount(0);
