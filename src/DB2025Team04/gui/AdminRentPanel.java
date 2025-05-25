@@ -194,6 +194,7 @@ public class AdminRentPanel extends JPanel {
 
             String sql;
             if (selectedStatuses.isEmpty()) {
+                // idx_rent_status, idx_rent_user_status_due 인덱스 사용
                 sql = "SELECT r.rent_id, i.category, i.item_name, u.user_name, " +
                         "r.borrow_date, r.return_date, r.rent_status " +
                         "FROM DB2025_RENT r " +
@@ -265,6 +266,7 @@ public class AdminRentPanel extends JPanel {
 
         try {
             conn = DatabaseManager.getInstance().getConnection();
+            // idx_user_status_due, idx_rent_status 인덱스 사용
             String sql = "SELECT user_id, user_name, active_rental_count, overdue_count, rented_items " +
                     "FROM VIEW_USER_RENTAL_OVERVIEW " +
                     "ORDER BY overdue_count DESC";
