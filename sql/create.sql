@@ -90,7 +90,7 @@ CREATE TABLE DB2025_RENT_LOG
     user_id            INT                                                     NOT NULL,                           -- 참조용 ID (외래키 없음)
     admin_id           INT,                                                                                        -- 처리 관리자 ID (외래키 없음)
     previous_status    ENUM ('대여신청','대여중','반납완료','연체중','연체반납', '대여가능', '대여불가'),                                    -- 이전 상태
-    current_status     ENUM ('대여신청','대여중','반납완료','연체중','연체반납', '대여가능', '대여불가') NOT NULL,                           -- 변경된 상태
+    current_status     ENUM ('대여신청','대여중','반납완료','연체중','연체반납', '대여가능', '대여불가', '예약취소') NOT NULL,                           -- 변경된 상태
     log_date           DATETIME                                                NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 로그 생성 시간
     borrow_date        DATE,                                                                                       -- 대여일
     due_date           DATE                                                    ,                           -- 반납예정일

@@ -998,8 +998,8 @@ public class DatabaseManager {
                         String logSql =
                                 "INSERT INTO DB2025_RENT_LOG " +
                                         "(rent_id, item_id, user_id, log_date, note, " +
-                                        "item_name, item_category, user_name, user_dep, operation_type, created_by) " +
-                                        "VALUES (0, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?)";
+                                        "item_name, item_category, user_name, user_dep, operation_type, created_by, current_status) " +
+                                        "VALUES (0, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?)";
 
                         PreparedStatement logStmt = conn.prepareStatement(logSql);
                         logStmt.setInt(1, itemId);
@@ -1011,6 +1011,7 @@ public class DatabaseManager {
                         logStmt.setString(7, userDep);
                         logStmt.setString(8, "삭제");
                         logStmt.setString(9, "SYSTEM");
+                        logStmt.setString(10, "예약취소");
                         logStmt.executeUpdate();
                         logStmt.close();
                     }
