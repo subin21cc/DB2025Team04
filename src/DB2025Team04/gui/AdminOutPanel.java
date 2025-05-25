@@ -110,7 +110,7 @@ public class AdminOutPanel extends JPanel {
                     "FROM DB2025_ITEMS i, DB2025_RENT r, DB2025_USER u " +
                     "WHERE i.item_id = r.item_id AND r.user_id = u.user_id AND r.rent_status='대여신청' " +
                     "ORDER BY borrow_date DESC";
-
+            // rent_status 부분 인덱스 사용
             stmt = conn.prepareStatement(sql);
             rs = stmt.executeQuery();
 

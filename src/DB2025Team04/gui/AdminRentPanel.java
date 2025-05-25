@@ -208,7 +208,7 @@ public class AdminRentPanel extends JPanel {
                         "FROM DB2025_RENT r " +
                         "JOIN DB2025_ITEMS i ON r.item_id = i.item_id " +
                         "JOIN DB2025_USER u ON r.user_id = u.user_id " +
-                        "WHERE r.rent_status IN (" + inClause + ") " +
+                        "WHERE r.rent_status IN (" + inClause + ") " + // 인덱스 적용
                         "ORDER BY r.borrow_date DESC";
                 stmt = conn.prepareStatement(sql);
                 for (int i = 0; i < selectedStatuses.size(); i++) {
