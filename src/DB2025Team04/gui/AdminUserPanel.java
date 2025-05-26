@@ -205,13 +205,13 @@ public class AdminUserPanel extends JPanel {
             if (isSearching) {
                 switch (searchTypeCombo.getSelectedIndex()) {
                     case 0: // ID
-                        sql += "WHERE u.user_id LIKE '%" + searchField.getText() + "%' ";
+                        sql += "WHERE u.user_id LIKE ? ";
                         break;
                     case 1: // 이름
-                        sql += "WHERE u.user_name LIKE '%" + searchField.getText() + "%' ";
+                        sql += "WHERE u.user_name LIKE ? ";
                         break;
                     case 2: // 부서
-                        sql += "WHERE u.user_dep LIKE '%" + searchField.getText() + "%' ";
+                        sql += "WHERE u.user_dep LIKE ? ";
                         break;
                 }
             }
@@ -219,6 +219,11 @@ public class AdminUserPanel extends JPanel {
             sql += "ORDER BY u.user_id";
 
             stmt = conn.prepareStatement(sql);
+
+            if (isSearching && !searchField.getText().isEmpty()) {
+                stmt.setString(1, "%" + searchField.getText() + "%");
+            }
+
             rs = stmt.executeQuery();
 
             tableModel.setRowCount(0);
