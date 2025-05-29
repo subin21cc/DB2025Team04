@@ -195,17 +195,22 @@ public class AdminRentPanel extends JPanel {
             }
         });
 
+        // 대여중/연체중이 아닌 경우 경고
         JScrollPane scrollPane = new JScrollPane(itemTable);
         add(scrollPane, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
+    /**
+     * 대여상태별 필터에 따라 대여 상세 목록을 DB에서 불러와 테이블에 표시
+     */
     public void loadItemList() {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
 
         try {
+            // 선택된 대여상태 목록 생성
             List<String> selectedStatuses = new ArrayList<>();
             if (checkBox1.isSelected()) selectedStatuses.add("대여신청");
             if (checkBox2.isSelected()) selectedStatuses.add("대여중");
@@ -213,6 +218,7 @@ public class AdminRentPanel extends JPanel {
             if (checkBox4.isSelected()) selectedStatuses.add("연체중");
             if (checkBox5.isSelected()) selectedStatuses.add("연체반납");
 
+            // 아무 상태도 선택 안 했으면 테이블 비움
             if (selectedStatuses.isEmpty()) {
                 tableModel.setRowCount(0);
                 return;
@@ -220,29 +226,15 @@ public class AdminRentPanel extends JPanel {
             conn = DatabaseManager.getInstance().getConnection();
 
             String sql;
-            if (selectedStatuses.isEmpty()) {
-                // idx_rent_status, idx_rent_user_status_due 인덱스 사용
-                sql = "SELECT r.rent_id, i.category, i.item_name, u.user_name, " +
-                        "r.borrow_date, r.return_date, r.rent_status " +
-                        "FROM DB2025_RENT r " +
-                        "JOIN DB2025_ITEMS i ON r.item_id = i.item_id " +
-                        "JOIN DB2025_USER u ON r.user_id = u.user_id " +
-                        "ORDER BY r.borrow_date DESC";
-                stmt = conn.prepareStatement(sql);
-            } else {
-                String inClause = String.join(",", Collections.nCopies(selectedStatuses.size(), "?"));
-                sql = "SELECT r.rent_id, i.category, i.item_name, u.user_name, " +
-                        "r.borrow_date, r.return_date, r.rent_status " +
-                        "FROM DB2025_RENT r " +
-                        "JOIN DB2025_ITEMS i ON r.item_id = i.item_id " +
-                        "JOIN DB2025_USER u ON r.user_id = u.user_id " +
-                        "WHERE r.rent_status IN (" + inClause + ") " + // 인덱스 적용
-                        "ORDER BY r.borrow_date DESC";
-                stmt = conn.prepareStatement(sql);
-                for (int i = 0; i < selectedStatuses.size(); i++) {
-                    stmt.setString(i + 1, selectedStatuses.get(i));
-                }
-            }
+            String inClause = String.join(",", Collections.nCopies(selectedStatuses.size(), "?"));
+            sql = "SELECT r.rent_id, i.category, i.item_name, u.user_name, " +
+                    "r.borrow_date, r.return_date, r.rent_status " +
+                    "FROM DB2025_RENT r " +
+                    "JOIN DB2025_ITEMS i ON r.item_id = i.item_id " +
+                    "JOIN DB2025_USER u ON r.user_id = u.user_id " +
+                    "WHERE r.rent_status IN (" + inClause + ") " +
+                    "ORDER BY r.borrow_date DESC";
+            stmt = conn.prepareStatement(sql);
 
             rs = stmt.executeQuery();
 
