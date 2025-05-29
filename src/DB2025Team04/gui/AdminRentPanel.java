@@ -14,17 +14,22 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 
+/**
+ * 관리자 대여 현황/반납처리 패널 클래스
+ * - 대여 상세/사용자 요약 보기, 대여상태별 필터, 반납처리 기능 제공
+ */
 public class AdminRentPanel extends JPanel {
-    private JTable itemTable;
-    private DefaultTableModel tableModel;
+    private JTable itemTable; // 대여 목록을 보여주는 테이블
+    private DefaultTableModel tableModel; // 테이블에 표시될 데이터 모델
+    // 상세/요약 보기 전환 라디오 버튼
     private JRadioButton detailRadio;
     private JRadioButton userSummaryRadio;
+    // 대여상태별 필터 체크박스
     private JButton returnButton;
     private JCheckBox allCheckBox;
     private JCheckBox checkBox1;
@@ -33,21 +38,29 @@ public class AdminRentPanel extends JPanel {
     private JCheckBox checkBox4;
     private JCheckBox checkBox5;
 
-
+    /**
+     * 패널 생성자. 레이아웃 설정 및 UI 컴포넌트 초기화
+     */
     public AdminRentPanel() {
         setLayout(new BorderLayout());
-        initComponents();
-//        loadItemList();
+        initComponents(); // UI 컴포넌트 초기화
     }
 
+    /**
+     * UI 컴포넌트(라디오, 체크박스, 테이블, 버튼 등) 초기화 및 이벤트 리스너 등록
+     */
     private void initComponents() {
+        // 상단 패널(라디오, 필터) 생성
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new GridLayout(2, 1));
 
+        // 상세/요약 보기 라디오 버튼 패널
         JPanel radioPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        // 대여상태 필터 체크박스 패널
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
-        detailRadio = new JRadioButton("상세 보기", true);
+        // 상세/요약 보기 라디오 버튼 생성 및 그룹화
+        detailRadio = new JRadioButton("상세 보기", true); // 기본 선택
         userSummaryRadio = new JRadioButton("사용자 요약");
         ButtonGroup viewGroup = new ButtonGroup();
         viewGroup.add(detailRadio);
@@ -56,6 +69,7 @@ public class AdminRentPanel extends JPanel {
         radioPanel.add(detailRadio);
         radioPanel.add(userSummaryRadio);
 
+        // 대여상태별 필터 체크박스 생성(전체, 각 상태)
         allCheckBox = new JCheckBox("전체", true);
         checkBox1 = new JCheckBox("대여신청", true);
         checkBox2 = new JCheckBox("대여중", true);
@@ -70,6 +84,7 @@ public class AdminRentPanel extends JPanel {
         filterPanel.add(checkBox4);
         filterPanel.add(checkBox5);
 
+        // '전체' 체크박스 클릭 시 모든 상태 체크/해제
         ActionListener checkAllListener = e -> {
             boolean isSelected = allCheckBox.isSelected();
             checkBox1.setSelected(isSelected);
@@ -79,6 +94,7 @@ public class AdminRentPanel extends JPanel {
             checkBox5.setSelected(isSelected);
         };
 
+        // 개별 체크박스 상태 변경 시 '전체' 체크박스 동기화
         ItemListener itemSyncListener = e -> {
             boolean allChecked = checkBox1.isSelected()
                                  && checkBox2.isSelected()
@@ -88,10 +104,12 @@ public class AdminRentPanel extends JPanel {
             allCheckBox.setSelected(allChecked);
         };
 
+        // 필터 변경 시 목록 새로고침(상세 보기일 때만)
         ItemListener reloadListener = e -> {
             if (detailRadio.isSelected()) loadItemList();
         };
 
+        // 체크박스 이벤트 리스너 등록
         checkBox1.addItemListener(reloadListener);
         checkBox2.addItemListener(reloadListener);
         checkBox3.addItemListener(reloadListener);
@@ -106,61 +124,70 @@ public class AdminRentPanel extends JPanel {
         checkBox4.addItemListener(itemSyncListener);
         checkBox5.addItemListener(itemSyncListener);
 
+        // 체크박스 이벤트 리스너 등록
         detailRadio.addActionListener(e -> {
-            loadItemList();
-            filterPanel.setVisible(true);
+            loadItemList(); // 상세 목록 로드
+            filterPanel.setVisible(true); // 필터 보이기
         });
         userSummaryRadio.addActionListener(e -> {
-            loadUserOverview();
-            filterPanel.setVisible(false);
+            loadUserOverview(); // 사용자 요약 로드
+            filterPanel.setVisible(false); // 필터 숨기기
         });
 
+        // 상단 패널에 라디오, 필터 추가
         topPanel.add(radioPanel);
         topPanel.add(filterPanel);
         add(topPanel, BorderLayout.NORTH);
 
-        // Table
+        // 대여 목록 테이블 및 모델 생성
         String[] columns = {"ID", "분류", "대여물품", "대여자", "대여일", "반납일", "대여상태", "경과일수"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Prevent editing
+                return false; // 셀 편집 비활성화
             }
         };
         itemTable = new JTable(tableModel);
         itemTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        // 테이블 행 선택 시 반납처리 버튼 활성화 조건
         itemTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 int selectedRow = itemTable.getSelectedRow();
+                // 상세보기 + 대여중/연체중 상태만 버튼 활성화
                 returnButton.setEnabled(selectedRow != -1 && detailRadio.isSelected() &&
                         ("대여중".equals(tableModel.getValueAt(selectedRow, 6)) ||
                         "연체중".equals(tableModel.getValueAt(selectedRow, 6))));
             }
         });
 
-        // 반납처리 버튼
+        // 반납처리 버튼 및 패널 생성
         JPanel buttonPanel = new JPanel();
         returnButton = new JButton("반납처리");
         returnButton.setEnabled(false); // 초기 상태에서는 버튼 비활성화
         buttonPanel.add(returnButton);
+
+        // 반납처리 버튼 클릭 시 동작
         returnButton.addActionListener(e -> {
             int selectedRow = itemTable.getSelectedRow();
             if (selectedRow != -1) {
                 int rentId = (int) tableModel.getValueAt(selectedRow, 0);
                 String status = (String) tableModel.getValueAt(selectedRow, 6);
+                // 대여중/연체중만 반납처리 가능
                 if ("대여중".equals(status) || "연체중".equals(status)) {
                     int option = JOptionPane.showConfirmDialog(this,
                             "반납처리 하시겠습니까?", "반납처리 확인",
                             JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                     if (option == JOptionPane.YES_OPTION) {
+                        // DB 반납처리
                         if (DatabaseManager.getInstance().processReturn(rentId)) {
                             JOptionPane.showMessageDialog(this, "반납처리가 완료되었습니다.");
-                            loadItemList(); // Refresh the item list
+                            loadItemList(); // 목록 새로고침
                         } else {
                             JOptionPane.showMessageDialog(this, "반납 처리 중 오류가 발생했습니다.", "오류", JOptionPane.ERROR_MESSAGE);
                         }
                     }
                 } else {
+                    // 대여중/연체중이 아닌 경우 경고
                     JOptionPane.showMessageDialog(this, "대여중 또는 연체중인 물품만 반납처리 가능합니다.", "경고", JOptionPane.WARNING_MESSAGE);
                 }
 
