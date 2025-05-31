@@ -37,17 +37,6 @@ public class MyRentStatusPanel extends JPanel {
         JScrollPane scrollPane = new JScrollPane(myRentTable);
         add(scrollPane, BorderLayout.CENTER);
 
-        JPanel buttonPanel = new JPanel();
-        addButton = new JButton("Add");
-        editButton = new JButton("Edit");
-        deleteButton = new JButton("Delete");
-
-        buttonPanel.add(addButton);
-        buttonPanel.add(editButton);
-        buttonPanel.add(deleteButton);
-
-        add(buttonPanel, BorderLayout.SOUTH);
-
     }
 
     public void loadItemList() {
