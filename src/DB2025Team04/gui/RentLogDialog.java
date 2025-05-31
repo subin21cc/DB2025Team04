@@ -205,8 +205,7 @@ public class RentLogDialog extends JDialog {
             int offset = (page - 1) * ROWS_PER_PAGE;
             
             if (SessionManager.getInstance().isAdmin()) {
-                // idx_rent_log_rent_id, idx_rent_log_user_id, idx_rent_log_item_id,
-                // idx_rent_log_date, idx_rent_log_status, idx_rent_log_op_type 인덱스 사용
+                // idx_rent_log_rent_id 인덱스 사용
                 // 관리자는 모든 로그 조회
                 sql = "SELECT log_id, item_name, item_category, user_name, user_dep, " +
                       "current_status, log_date, borrow_date, due_date, return_date, " +
@@ -218,7 +217,7 @@ public class RentLogDialog extends JDialog {
                 stmt.setInt(1, ROWS_PER_PAGE);
                 stmt.setInt(2, offset);
             } else {
-                // idx_rent_log_date, idx_rent_log_op_type, idx_rent_log_status 인덱스 사용
+                // idx_rent_log_rent_id, idx_rent_log_user_id 인덱스 사용
                 // 일반 사용자는 자신의 로그만 조회
                 sql = "SELECT log_id, item_name, item_category, user_name, user_dep, " +
                       "current_status, log_date, borrow_date, due_date, return_date, " +
