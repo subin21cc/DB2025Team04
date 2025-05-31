@@ -236,6 +236,10 @@ public class AdminRentPanel extends JPanel {
                     "ORDER BY r.borrow_date DESC";
             stmt = conn.prepareStatement(sql);
 
+            for (int i = 0; i < selectedStatuses.size(); i++) {
+                stmt.setString(i + 1, selectedStatuses.get(i));
+            }
+
             rs = stmt.executeQuery();
 
             String[] columns = {"ID", "분류", "대여물품", "대여자", "대여일", "반납일", "대여상태", "경과일수"};
