@@ -294,81 +294,66 @@ INSERT INTO DB2025_ITEMS (item_id, item_name, quantity, available_quantity, cate
 
 -- 대여 데이터
 -- 현재 날짜 기준으로 다양한 대여 상태의 데이터 삽입
-INSERT INTO DB2025_RENT (item_id, user_id, borrow_date, return_date, rent_status) VALUES
-    -- 1. 대여 기간 내 - 정상 대여중
-    (3001, 2025001, DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY), NULL, '대여중'),
 
-    -- 2. 정상 반납 완료
-    (3002, 2025002, DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY), '반납완료'),
+-- 기존 데이터 삭제 (나중에 지워야 함)
+DELETE FROM DB2025_RENT;
+DELETE FROM DB2025_RESERVATION;
 
-    -- 3. 연체중 상태 - 이미 처리된 상태
-    (3004, 2025003, DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), NULL, '연체중'),
-
-    -- 4. 대여신청 상태
-    (3005, 2025005, CURRENT_DATE, NULL, '대여신청'),
-
-    -- 5. 정상 반납 완료 - 예약자가 대여할 물품
-    (3006, 2025006, DATE_SUB(CURRENT_DATE, INTERVAL 15 DAY), DATE_SUB(CURRENT_DATE, INTERVAL 8 DAY), '반납완료'),
-
-    -- 6. 대여중 - 대여 불가 사용자
-    (3007, 2025007, DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), NULL, '대여중'),
-
-    -- 7. 연체중 상태 - 이미 처리된 상태
-    (3008, 2025008, DATE_SUB(CURRENT_DATE, INTERVAL 8 DAY), NULL, '연체중'),
-
-    -- 8. 대여신청 상태 - 미래 날짜
-    (3009, 2025009, DATE_ADD(CURRENT_DATE, INTERVAL 1 DAY), NULL, '대여신청'),
-
-    -- 9. 정상 반납 완료
-    (3003, 2025010, DATE_SUB(CURRENT_DATE, INTERVAL 20 DAY), DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), '반납완료'),
-
-    -- 10. 정상 대여중
-    (3003, 2025004, DATE_SUB(CURRENT_DATE, INTERVAL 5 DAY), NULL, '대여중'),
-
-    -- 11. 연체 후 반납 완료
-    (3002, 2025008, DATE_SUB(CURRENT_DATE, INTERVAL 20 DAY), DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), '연체반납'),
-
-    -- 12. 정상 대여중
-    (3006, 2025002, DATE_SUB(CURRENT_DATE, INTERVAL 4 DAY), NULL, '대여중'),
-
-    -- 13. [테스트 케이스 1] 오늘 연체될 항목 (정확히 7일 지난 상태)
-    -- processAutoTask에서 연체중으로 변경될 예정
-    (3001, 2025010, DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY), NULL, '대여중'),
-
-    -- 14. 대여신청 상태 - 오늘 신청
-    (3004, 2025001, CURRENT_DATE, NULL, '대여신청'),
-
-    -- 15. [테스트 케이스 2] 내일 연체 예정인 항목 - 이건 연체로 처리되지 않아야 함
-    (3005, 2025004, DATE_SUB(CURRENT_DATE, INTERVAL 6 DAY), NULL, '대여중'),
-
-    -- 16. [테스트 케이스 3] 연체로 처리될 항목 (8일 전 대여, 아직 '대여중' 상태)
-    -- processAutoTask 실행 시 '연체중'으로 변경되어야 함
-    (3001, 2025002, DATE_SUB(CURRENT_DATE, INTERVAL 8 DAY), NULL, '대여중'),
-
-    -- 17. [테스트 케이스 4] 심각한 연체 상태 (15일 전 대여, 아직 '대여중' 상태)
-    -- processAutoTask 실행 시 '연체중'으로 변경되고, 사용자가 '대여불가' 상태로 변경되어야 함
-    (3002, 2025005, DATE_SUB(CURRENT_DATE, INTERVAL 15 DAY), NULL, '대여중');
-
--- 예약 데이터 추가 - 자동 처리 테스트를 위한 예약 상태
+-- 예약 데이터 삽입
 INSERT INTO DB2025_RESERVATION (user_id, item_id, reserve_date) VALUES
-    -- 1. [테스트 케이스 5] 대여가능 수량이 0인 물품에 대한 예약 (물품 id 3004)
-    -- 연체 처리될 사용자(2025005)의 예약 - processAutoTask 실행 시 취소되어야 함
-    (2025005, 3004, DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY)),
+    (2025001, 3004, DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY)),   -- 2025001: 회의용마이크 예약
+    (2025003, 3002, DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY)),
+    (2025004, 3004, CURRENT_DATE);
 
-    -- 2. [테스트 케이스 6] 다른 사용자의 예약 - 정상 유지되어야 함
-    (2025006, 3004, DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY)),
+-- 대여 데이터 삽입
+INSERT INTO DB2025_RENT (item_id, user_id, borrow_date, return_date, rent_status) VALUES
+  -- 노트북(3001): 총 10개, 가용 7개 -> 3개 대여중
+  (3001, 2025001, DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), NULL, '연체중'),    -- 2025001: 연체중
+  (3001, 2025002, DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), NULL, '대여중'),
+  (3001, 2025004, DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), NULL, '대여중'),
+  (3001, 2025005, DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), DATE_SUB(CURRENT_DATE, INTERVAL 5 DAY), '반납완료'),
 
-    -- 3. [테스트 케이스 7] 연체 처리될 사용자(2025005)의 다른 예약 - 모두 취소되어야 함
-    (2025005, 3003, CURRENT_DATE),
+  -- 빔프로젝터(3002): 총 5개, 가용 2개 -> 2개 대여중, 1개 연체중
+  (3002, 2025001, DATE_SUB(CURRENT_DATE, INTERVAL 4 DAY), NULL, '대여중'),    -- 2025001: 대여중
+  (3002, 2025006, DATE_SUB(CURRENT_DATE, INTERVAL 4 DAY), NULL, '대여중'),
+  (3002, 2025008, DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), NULL, '연체중'),
+  (3002, 2025009, DATE_SUB(CURRENT_DATE, INTERVAL 15 DAY), DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), '연체반납'),
 
-    -- 4. [테스트 케이스 8] 대여가능 수량이 있는 물품에 대한 예약
-    -- processAutoTask 실행 시 대여신청으로 전환되어야 함
-    (2025009, 3001, DATE_SUB(CURRENT_DATE, INTERVAL 5 DAY)),
+  -- 공학용계산기(3003): 총 20개, 가용 15개 -> 5개 대여중
+  (3003, 2025002, DATE_SUB(CURRENT_DATE, INTERVAL 4 DAY), NULL, '대여중'),
+  (3003, 2025003, DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY), NULL, '대여중'),
+  (3003, 2025004, DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), NULL, '대여중'),
+  (3003, 2025005, DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), NULL, '대여중'),
+  (3003, 2025006, DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), NULL, '대여중'),
+  (3003, 2025007, DATE_SUB(CURRENT_DATE, INTERVAL 20 DAY), DATE_SUB(CURRENT_DATE, INTERVAL 15 DAY), '반납완료'),
 
-    -- 5. [테스트 케이스 9] 대여불가 사용자(2025007)의 예약
-    -- processAutoTask 실행 시 취소되어야 함
-    (2025007, 3005, DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY)),
+  -- 회의용마이크(3004): 총 8개, 가용 0개 -> 6개 대여중, 2개 대여신청
+  (3004, 2025001, CURRENT_DATE, NULL, '대여신청'),    -- 2025001: 대여신청
+  (3004, 2025007, DATE_SUB(CURRENT_DATE, INTERVAL 6 DAY), NULL, '대여중'),
+  (3004, 2025008, DATE_SUB(CURRENT_DATE, INTERVAL 5 DAY), NULL, '대여중'),
+  (3004, 2025009, DATE_SUB(CURRENT_DATE, INTERVAL 4 DAY), NULL, '대여중'),
+  (3004, 2025010, DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY), NULL, '대여중'),
+  (3004, 2025002, DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), NULL, '대여중'),
+  (3004, 2025003, DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), NULL, '대여중'),
+  (3004, 2025005, CURRENT_DATE, NULL, '대여신청'),
 
-    -- 6. [테스트 케이스 10] 대여가능 수량이 없지만 예약 순서가 뒤인 경우
-    -- 유지되어야 함
-    (2025001, 3004, DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY));
+  -- 태블릿(3005): 총 7개, 가용 5개 -> 1개 대여중, 1개 연체중
+  (3005, 2025005, DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY), NULL, '대여중'),
+  (3005, 2025006, DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), NULL, '연체중'),
+  (3005, 2025007, DATE_SUB(CURRENT_DATE, INTERVAL 15 DAY), DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), '반납완료'),
+
+  -- 디지털카메라(3006): 총 4개, 가용 1개 -> 2개 대여중, 1개 연체중
+  (3006, 2025008, DATE_SUB(CURRENT_DATE, INTERVAL 5 DAY), NULL, '대여중'),
+  (3006, 2025009, DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY), NULL, '대여중'),
+  (3006, 2025010, DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), NULL, '연체중'),
+
+  -- 볼펜(3007): 총 3개, 가용 2개 -> 1개 대여중
+  (3007, 2025002, DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), NULL, '대여중'),
+  (3007, 2025003, DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), DATE_SUB(CURRENT_DATE, INTERVAL 5 DAY), '반납완료'),
+
+  -- 지우개(3008): 총 2개, 가용 1개 -> 1개 대여중
+  (3008, 2025003, DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), NULL, '대여중'),
+
+  -- 컴퓨터사인펜(3009): 총 12개, 가용 12개 -> 모두 가용
+  (3009, 2025004, DATE_SUB(CURRENT_DATE, INTERVAL 15 DAY), DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), '반납완료'),
+  (3009, 2025005, DATE_SUB(CURRENT_DATE, INTERVAL 20 DAY), DATE_SUB(CURRENT_DATE, INTERVAL 15 DAY), '반납완료');

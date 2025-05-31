@@ -121,13 +121,13 @@ public class MainWindow extends JFrame {
             });
         }
         add(tabbedPane, BorderLayout.CENTER);
-        JPanel statusPanel = new JPanel();
-        statusPanel.setBorder(BorderFactory.createLoweredSoftBevelBorder());
-        statusPanel.setLayout(new BoxLayout(statusPanel, BoxLayout.X_AXIS));
-        JLabel statusLabel = new JLabel("Ready");
-        statusPanel.add(statusLabel);
-
-        add(statusPanel, BorderLayout.SOUTH);
+//        JPanel statusPanel = new JPanel();
+//        statusPanel.setBorder(BorderFactory.createLoweredSoftBevelBorder());
+//        statusPanel.setLayout(new BoxLayout(statusPanel, BoxLayout.X_AXIS));
+//        JLabel statusLabel = new JLabel("Ready");
+//        statusPanel.add(statusLabel);
+//
+//        add(statusPanel, BorderLayout.SOUTH);
 
         JMenuBar menuBar = createMenuBar();
         setJMenuBar(menuBar);
