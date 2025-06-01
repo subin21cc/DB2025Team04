@@ -176,7 +176,7 @@ public class ItemDialog extends JDialog {
 
         try {
             conn = DatabaseManager.getInstance().getConnection();
-            
+            conn.setAutoCommit(false); // 트랜잭션 시작
             // 아이템 수정
             String updateSql = "UPDATE DB2025_ITEMS SET item_name = ?, quantity = ?, available_quantity = ?, category = ? WHERE item_id = ?";
             stmt = conn.prepareStatement(updateSql);
@@ -196,8 +196,11 @@ public class ItemDialog extends JDialog {
                 JOptionPane.showMessageDialog(this, "물품 수정에 실패했습니다.", "오류", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
-            
+
+            conn.commit(); // 트랜잭션 커밋
+            return true;
         } catch (SQLException e) {
+            if (conn != null) conn.rollback(); // 오류 발생 시 롤백
             JOptionPane.showMessageDialog(this, "데이터베이스 오류: " + e.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
             return false;
@@ -213,7 +216,8 @@ public class ItemDialog extends JDialog {
 
         try {
             conn = DatabaseManager.getInstance().getConnection();
-            
+            conn.setAutoCommit(false); // 트랜잭션 시작
+
             // 먼저 가장 큰 item_id 값을 조회하여 새 ID 생성
             String maxIdSql = "SELECT MAX(item_id) FROM DB2025_ITEMS";
             stmt = conn.prepareStatement(maxIdSql);
@@ -242,8 +246,11 @@ public class ItemDialog extends JDialog {
                 JOptionPane.showMessageDialog(this, "물품 추가에 실패했습니다.", "오류", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
-            
+
+            conn.commit(); // 트랜잭션 커밋
+            return true;
         } catch (SQLException e) {
+            if (conn != null) conn.rollback(); // 오류 발생 시 롤백
             JOptionPane.showMessageDialog(this, "데이터베이스 오류: " + e.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
             return false;
