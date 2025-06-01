@@ -13,22 +13,18 @@ import java.util.Vector;
 public class MyRentStatusPanel extends JPanel {
     private JTable myRentTable;
     private DefaultTableModel tableModel;
-    private JButton addButton;
-    private JButton editButton;
-    private JButton deleteButton;
 
     public MyRentStatusPanel() {
         setLayout(new BorderLayout());
         initComponents();
-//        loadMyRentStatus();
     }
 
     private void initComponents() {
-        String[] columnNames = {"물품ID", "분류", "이름", "대여일", "반납일", "대여상태"};
+        String[] columnNames = {"대여ID", "물품ID", "분류", "이름", "대여일", "반납일", "대여상태"};
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Prevent editing
+                return false;
             }
         };
         myRentTable = new JTable(tableModel);
@@ -36,7 +32,6 @@ public class MyRentStatusPanel extends JPanel {
 
         JScrollPane scrollPane = new JScrollPane(myRentTable);
         add(scrollPane, BorderLayout.CENTER);
-
     }
 
     public void loadItemList() {
@@ -47,15 +42,11 @@ public class MyRentStatusPanel extends JPanel {
         try {
             conn = DatabaseManager.getInstance().getConnection();
 
-            String sql = "SELECT i.item_id, category, item_name, borrow_date, return_date, r.rent_status " +
-                    "FROM DB2025_ITEMS i, DB2025_RENT r " +
-                    "WHERE r.user_id = ? AND i.item_id = r.item_id " +
+            // VIEW_USER_RENT_STATUS 뷰 사용
+            String sql = "SELECT rent_id, item_id, category, item_name, borrow_date, return_date, rent_status " +
+                    "FROM VIEW_USER_RENT_STATUS " +
+                    "WHERE user_id = ? " +
                     "ORDER BY borrow_date DESC";
-//            String sql = "SELECT rent_id, category, item_name, borrow_date, return_date, rent_status " +
-//                    "FROM VIEW_USER_RENT_STATUS " +
-//                    "WHERE user_id = ? " +
-//                    "ORDER BY borrow_date DESC";
-
 
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, SessionManager.getInstance().getUserId());
@@ -66,6 +57,7 @@ public class MyRentStatusPanel extends JPanel {
 
             while (rs.next()) {
                 Vector<Object> row = new Vector<>();
+                row.add(rs.getInt("rent_id"));
                 row.add(rs.getInt("item_id"));
                 row.add(rs.getString("category"));
                 row.add(rs.getString("item_name"));
@@ -82,8 +74,8 @@ public class MyRentStatusPanel extends JPanel {
                 tableModel.addRow(row);
             }
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error loading my rent status: " + e.getMessage(),
-                    "Database Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "내 대여 현황 로딩 실패: " + e.getMessage(),
+                    "데이터베이스 오류", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         } finally {
             DatabaseManager.getInstance().closeResources(conn, stmt, rs);
