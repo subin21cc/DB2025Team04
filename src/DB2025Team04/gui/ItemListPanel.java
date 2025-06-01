@@ -256,14 +256,12 @@ public class ItemListPanel extends JPanel {
         try {
             conn = DatabaseManager.getInstance().getConnection();
 
-            // idx_item_category 인덱스 사용
             String sql = "SELECT item_id, item_name, quantity, available_quantity, category " +
                     "FROM DB2025_ITEMS ";
             boolean hasCondition = false;
             if (isSearching) {
                 switch (searchTypeCombo.getSelectedIndex()) {
                     case 0:
-                        // idx_item_category 인덱스 사용
                         sql += "WHERE category LIKE ? ";
                         hasCondition = true;
                         break;

@@ -131,9 +131,9 @@ public class AdminOutPanel extends JPanel {
             conn = DatabaseManager.getInstance().getConnection();
 
             // 대여신청 상태의 대여 목록 조회 쿼리
-            // idx_rent_status, idx_rent_log_status 인덱스 사용
+            // idx_rent_status 인덱스 사용
             String sql = "SELECT r.rent_id, category, item_name, borrow_date, u.user_name " +
-                    "FROM DB2025_ITEMS i, DB2025_RENT r, DB2025_USER u " +
+                    "FROM DB2025_ITEMS i, DB2025_RENT r USE INDEX (idx_rent_status), DB2025_USER u " +
                     "WHERE i.item_id = r.item_id AND r.user_id = u.user_id AND r.rent_status='대여신청' " +
                     "ORDER BY borrow_date DESC";
             stmt = conn.prepareStatement(sql);

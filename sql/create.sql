@@ -165,16 +165,11 @@ GROUP BY
 
 -- 인덱스 생성
 CREATE INDEX idx_rent_status ON DB2025_RENT (rent_status);
-CREATE INDEX idx_item_category ON DB2025_ITEMS (category);
-CREATE INDEX idx_rent_user_status_due ON DB2025_RENT (user_id, rent_status, due_date);
-
--- 대여 로그 인덱스 생성
-CREATE INDEX idx_rent_log_rent_id ON DB2025_RENT_LOG (rent_id);
-CREATE INDEX idx_rent_log_user_id ON DB2025_RENT_LOG (user_id);
-CREATE INDEX idx_rent_log_item_id ON DB2025_RENT_LOG (item_id);
-CREATE INDEX idx_rent_log_date ON DB2025_RENT_LOG (log_date);
-CREATE INDEX idx_rent_log_status ON DB2025_RENT_LOG (previous_status, current_status);
-CREATE INDEX idx_rent_log_op_type ON DB2025_RENT_LOG (operation_type);
+CREATE INDEX idx_item_user_status ON DB2025_RENT (item_id, user_id, rent_status);
+CREATE INDEX idx_item_status ON DB2025_RENT (item_id, rent_status);
+CREATE INDEX idx_item_user ON DB2025_RESERVATION (item_id, user_id);
+CREATE INDEX idx_user_status ON DB2025_USER (user_id, user_status);
+CREATE INDEX idx_user_phone ON DB2025_USER (user_phone);
 
 
 -- 사용자 데이터
@@ -213,9 +208,14 @@ INSERT INTO DB2025_ITEMS (item_id, item_name, quantity, available_quantity, cate
 
 -- 예약 데이터 삽입
 INSERT INTO DB2025_RESERVATION (user_id, item_id, reserve_date) VALUES
+    -- [테스트 케이스 1] 대여가능 수량이 있는 물품에 대한 예약
+    -- processAutoTask 실행 시 대여신청으로 전환되어야 함
+    (2025009, 3001, DATE_SUB(CURRENT_DATE, INTERVAL 5 DAY)),
     (2025001, 3004, DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY)),   -- 2025001: 회의용마이크 예약
-    (2025003, 3002, DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY)),
-    (2025004, 3004, CURRENT_DATE);
+    (2025004, 3004, CURRENT_DATE),
+    -- [테스트 케이스 2] 대여불가 사용자(2025007)의 예약
+    -- processAutoTask 실행 시 취소되어야 함
+    (2025007, 3005, DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY));
 
 -- 대여 데이터 삽입
 INSERT INTO DB2025_RENT (item_id, user_id, borrow_date, return_date, rent_status) VALUES
@@ -227,12 +227,16 @@ INSERT INTO DB2025_RENT (item_id, user_id, borrow_date, return_date, rent_status
 
   -- 빔프로젝터(3002): 총 5개, 가용 2개 -> 2개 대여중, 1개 연체중
   (3002, 2025001, DATE_SUB(CURRENT_DATE, INTERVAL 4 DAY), NULL, '대여중'),    -- 2025001: 대여중
-  (3002, 2025006, DATE_SUB(CURRENT_DATE, INTERVAL 4 DAY), NULL, '대여중'),
+  -- [테스트 케이스 3] 심각한 연체 상태 (15일 전 대여, 아직 '대여중' 상태)
+  -- processAutoTask 실행 시 '연체중'으로 변경되고, 사용자가 '대여불가' 상태로 변경되어야 함
+  (3002, 2025005, DATE_SUB(CURRENT_DATE, INTERVAL 15 DAY), NULL, '대여중'),
   (3002, 2025008, DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), NULL, '연체중'),
   (3002, 2025009, DATE_SUB(CURRENT_DATE, INTERVAL 15 DAY), DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), '연체반납'),
 
   -- 공학용계산기(3003): 총 20개, 가용 15개 -> 5개 대여중
-  (3003, 2025002, DATE_SUB(CURRENT_DATE, INTERVAL 4 DAY), NULL, '대여중'),
+  -- [테스트 케이스 4] 오늘 연체될 항목 (정확히 7일 지난 상태)
+  -- processAutoTask에서 연체중으로 변경될 예정
+  (3003, 2025001, DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY), NULL, '대여중'),
   (3003, 2025003, DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY), NULL, '대여중'),
   (3003, 2025004, DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), NULL, '대여중'),
   (3003, 2025005, DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), NULL, '대여중'),
@@ -250,7 +254,9 @@ INSERT INTO DB2025_RENT (item_id, user_id, borrow_date, return_date, rent_status
   (3004, 2025005, CURRENT_DATE, NULL, '대여신청'),
 
   -- 태블릿(3005): 총 7개, 가용 5개 -> 1개 대여중, 1개 연체중
-  (3005, 2025005, DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY), NULL, '대여중'),
+  -- [테스트 케이스 5] 연체로 처리될 항목 (8일 전 대여, 아직 '대여중' 상태)
+  -- processAutoTask 실행 시 '연체중'으로 변경되어야 함
+  (3005, 2025001, DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), NULL, '대여중'),
   (3005, 2025006, DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), NULL, '연체중'),
   (3005, 2025007, DATE_SUB(CURRENT_DATE, INTERVAL 15 DAY), DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), '반납완료'),
 

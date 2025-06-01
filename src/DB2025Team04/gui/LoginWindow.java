@@ -67,8 +67,8 @@ public class LoginWindow extends JFrame {
         mainPanel.add(passwordField, gbc);
 
         // test를 위해서 id, password를 미리 설정
-        idField.setText("2025001");
-        passwordField.setText("pw1234");
+//        idField.setText("2025001");
+//        passwordField.setText("pw1234");
         
         // 로그인 버튼
         JButton loginButton = new JButton("로그인");

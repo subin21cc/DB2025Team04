@@ -2,7 +2,6 @@ package DB2025Team04.gui;
 
 import DB2025Team04.db.DatabaseManager;
 import DB2025Team04.util.SessionManager;
-import DB2025Team04.util.ConfigManager;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;

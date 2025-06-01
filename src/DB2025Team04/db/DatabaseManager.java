@@ -100,7 +100,9 @@ public class DatabaseManager {
             conn.setAutoCommit(false); // 트랜잭션 시작
 
             // 0. 대여 가능 여부 확인
-            String checkSql = "SELECT count(*) FROM DB2025_RENT WHERE item_id = ? AND user_id = ? AND rent_status in ('대여중', '대여신청', '연체중')";
+            // idx_item_user_status 인덱스 사용
+            String checkSql = "SELECT count(*) FROM DB2025_RENT USE INDEX (idx_item_user_status) "
+                + "WHERE item_id = ? AND user_id = ? AND rent_status in ('대여중', '대여신청', '연체중')";
             stmt = conn.prepareStatement(checkSql);
             stmt.setInt(1, itemId);
             stmt.setInt(2, userId);
@@ -427,7 +429,9 @@ public class DatabaseManager {
             conn = getConnection();
             
             // 대여 중인 물품인지 확인
-            String checkSql = "SELECT COUNT(*) FROM DB2025_RENT WHERE item_id = ? AND rent_status IN ('대여중', '대여신청', '연체중')";
+            // idx_item_status 인덱스 사용
+            String checkSql = "SELECT COUNT(*) FROM DB2025_RENT USE INDEX (idx_item_status) "
+                + "WHERE item_id = ? AND rent_status IN ('대여중', '대여신청', '연체중')";
             stmt = conn.prepareStatement(checkSql);
             stmt.setInt(1, itemId);
             ResultSet rs = stmt.executeQuery();
@@ -490,7 +494,9 @@ public class DatabaseManager {
             }
 
             // 2. 이미 예약한 내역이 있는지 확인
-            String reservationCheckSql = "SELECT COUNT(*) FROM DB2025_RESERVATION WHERE item_id = ? AND user_id = ?";
+            // idx_item_user 인덱스 사용
+            String reservationCheckSql = "SELECT COUNT(*) FROM DB2025_RESERVATION USE INDEX (idx_item_user) "
+                + "WHERE item_id = ? AND user_id = ?";
             stmt = conn.prepareStatement(reservationCheckSql);
             stmt.setInt(1, itemId);
             stmt.setInt(2, userId);
@@ -502,7 +508,9 @@ public class DatabaseManager {
             }
 
             // 3. 연체 중인지 확인
-            String overdueCheckSql = "SELECT COUNT(*) FROM DB2025_USER WHERE user_id = ? AND user_status = '대여불가'";
+            // idx_user_status 인덱스 사용
+            String overdueCheckSql = "SELECT COUNT(*) FROM DB2025_USER USE INDEX (idx_user_status) "
+                + "WHERE user_id = ? AND user_status = '대여불가'";
             stmt = conn.prepareStatement(overdueCheckSql);
             stmt.setInt(1, userId);
             rs = stmt.executeQuery();
@@ -591,7 +599,8 @@ public class DatabaseManager {
             }
             
             // 2. 전화번호 중복 체크
-            checkSql = "SELECT COUNT(*) FROM DB2025_USER WHERE user_phone = ?";
+            // idx_user_phone 인덱스 사용
+            checkSql = "SELECT COUNT(*) FROM DB2025_USER USE INDEX (idx_user_phone) WHERE user_phone = ?";
             stmt = conn.prepareStatement(checkSql);
             stmt.setString(1, phone);
             rs = stmt.executeQuery();

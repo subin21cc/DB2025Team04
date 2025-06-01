@@ -180,6 +180,7 @@ public class RentLogDialog extends JDialog {
             } else {
                 // 일반 사용자는 자신의 로그만 조회
                 countSql = "SELECT COUNT(*) FROM DB2025_RENT_LOG WHERE user_id = ?";
+
                 stmt = conn.prepareStatement(countSql);
                 stmt.setInt(1, SessionManager.getInstance().getUserId());
             }
@@ -205,27 +206,29 @@ public class RentLogDialog extends JDialog {
             int offset = (page - 1) * ROWS_PER_PAGE;
             
             if (SessionManager.getInstance().isAdmin()) {
-                // idx_rent_log_rent_id 인덱스 사용
                 // 관리자는 모든 로그 조회
                 sql = "SELECT log_id, item_name, item_category, user_name, user_dep, " +
-                      "current_status, log_date, borrow_date, due_date, return_date, " +
-                      "overdue_days, note " +
-                      "FROM DB2025_RENT_LOG " +
-                      "ORDER BY log_id DESC " +
-                      "LIMIT ? OFFSET ?";
+                        "current_status, log_date, borrow_date, due_date, return_date, " +
+                        "overdue_days, note " +
+                        "FROM DB2025_RENT_LOG " +
+                        "ORDER BY log_date DESC " +
+                        "LIMIT ? OFFSET ?";
+
                 stmt = conn.prepareStatement(sql);
                 stmt.setInt(1, ROWS_PER_PAGE);
                 stmt.setInt(2, offset);
             } else {
-                // idx_rent_log_rent_id, idx_rent_log_user_id 인덱스 사용
                 // 일반 사용자는 자신의 로그만 조회
                 sql = "SELECT log_id, item_name, item_category, user_name, user_dep, " +
-                      "current_status, log_date, borrow_date, due_date, return_date, " +
-                      "overdue_days, note " +
-                      "FROM DB2025_RENT_LOG " +
-                      "WHERE user_id = ? " +
-                      "ORDER BY log_id DESC " +
-                      "LIMIT ? OFFSET ?";
+                        "current_status, log_date, borrow_date, due_date, return_date, " +
+                        "overdue_days, note " +
+                        "FROM DB2025_RENT_LOG " +
+                        "WHERE user_id = ? " +
+                        "ORDER BY log_id DESC " +
+                        "LIMIT ? OFFSET ?";
+
+
+
                 stmt = conn.prepareStatement(sql);
                 stmt.setInt(1, SessionManager.getInstance().getUserId());
                 stmt.setInt(2, ROWS_PER_PAGE);
