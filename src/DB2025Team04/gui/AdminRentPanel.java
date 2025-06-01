@@ -227,11 +227,11 @@ public class AdminRentPanel extends JPanel {
 
             String sql;
             String inClause = String.join(",", Collections.nCopies(selectedStatuses.size(), "?"));
-            sql = "SELECT r.rent_id, i.category, i.item_name, u.user_name, " +
+            sql = "SELECT r.rent_id, i.category, i.item_name, " +
+                    "(SELECT user_name FROM DB2025_USER u WHERE u.user_id = r.user_id) as user_name, " +
                     "r.borrow_date, r.return_date, r.rent_status " +
                     "FROM DB2025_RENT r " +
                     "JOIN DB2025_ITEMS i ON r.item_id = i.item_id " +
-                    "JOIN DB2025_USER u ON r.user_id = u.user_id " +
                     "WHERE r.rent_status IN (" + inClause + ") " +
                     "ORDER BY r.borrow_date DESC";
             stmt = conn.prepareStatement(sql);
