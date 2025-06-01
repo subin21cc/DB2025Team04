@@ -32,7 +32,7 @@ public class AdminUserPanel extends JPanel {
         // 검색 패널
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         searchField = new JTextField(20);
-        searchTypeCombo = new JComboBox<>(new String[]{"ID", "이름", "학과"});
+        searchTypeCombo = new JComboBox<>(new String[]{"사용자ID", "이름", "학과"});
         JButton searchButton = new JButton("검색");
         searchButton.addActionListener(e -> searchUsers());
         JButton resetButton = new JButton("검색 초기화");
@@ -45,7 +45,7 @@ public class AdminUserPanel extends JPanel {
         searchPanel.add(resetButton);
 
         // 테이블
-        String[] columns = {"ID", "이름", "학과", "전화번호", "상태", "관리자여부"};
+        String[] columns = {"사용자ID", "이름", "학과", "전화번호", "상태", "관리자여부"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {

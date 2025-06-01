@@ -35,7 +35,7 @@ public class AdminOutPanel extends JPanel {
      */
     private void initComponents() {
         // 테이블 컬럼명 정의: 대여ID, 분류, 이름, 대여자, 대여일
-        String[] columns = {"ID", "분류", "이름", "대여자", "대여일"};
+        String[] columns = {"대여ID", "분류", "이름", "대여자", "대여일"};
         // 테이블 모델 생성(셀 편집 불가)
         tableModel = new DefaultTableModel(columns, 0) {
             @Override

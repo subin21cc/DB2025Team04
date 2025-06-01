@@ -112,6 +112,29 @@ CREATE TABLE DB2025_RENT_LOG
 
 
 -- 뷰 생성
+
+-- 대여 현황 뷰: 대여 상태별로 물품의 대여 현황을 집계
+DROP VIEW IF EXISTS VIEW_USER_RENT_STATUS;
+CREATE VIEW VIEW_USER_RENT_STATUS AS
+SELECT
+    r.rent_id,
+    r.item_id,
+    r.user_id,
+    i.category,
+    i.item_name,
+    r.borrow_date,
+    r.return_date,
+    r.rent_status,
+    CASE
+        WHEN r.rent_status = '연체중' THEN
+            DATEDIFF(COALESCE(r.return_date, CURRENT_DATE), r.borrow_date)
+        ELSE NULL
+        END as elapsed_days
+FROM DB2025_RENT r
+         JOIN DB2025_ITEMS i ON i.item_id = r.item_id
+ORDER BY r.borrow_date DESC;
+
+
 -- 대여 물품 현황 뷰: 전체 수량, 사용 가능 수량과 현재 대여 중인 수를 함께 표시
 CREATE VIEW VIEW_RENTAL_ITEMS_STATUS AS
 SELECT

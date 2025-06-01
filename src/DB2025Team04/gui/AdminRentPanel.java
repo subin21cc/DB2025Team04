@@ -140,7 +140,7 @@ public class AdminRentPanel extends JPanel {
         add(topPanel, BorderLayout.NORTH);
 
         // 대여 목록 테이블 및 모델 생성
-        String[] columns = {"ID", "분류", "대여물품", "대여자", "대여일", "반납일", "대여상태", "경과일수"};
+        String[] columns = {"물품ID", "분류", "대여물품", "대여자", "대여일", "반납일", "대여상태", "경과일수"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -242,7 +242,7 @@ public class AdminRentPanel extends JPanel {
 
             rs = stmt.executeQuery();
 
-            String[] columns = {"ID", "분류", "대여물품", "대여자", "대여일", "반납일", "대여상태", "경과일수"};
+            String[] columns = {"대여ID", "분류", "대여물품", "대여자", "대여일", "반납일", "대여상태", "경과일수"};
             tableModel.setColumnIdentifiers(columns);
             tableModel.setRowCount(0);
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -297,7 +297,7 @@ public class AdminRentPanel extends JPanel {
             stmt = conn.prepareStatement(sql);
             rs = stmt.executeQuery();
 
-            String[] columns = {"ID", "대여자", "대여중/연체중", "연체건수", "대여 중인 물품"};
+            String[] columns = {"사용자ID", "대여자", "대여중/연체중", "연체건수", "대여 중인 물품"};
             tableModel.setColumnIdentifiers(columns);
             tableModel.setRowCount(0);
 

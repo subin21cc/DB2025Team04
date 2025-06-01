@@ -96,7 +96,7 @@ public class AdminReservationPanel extends JPanel {
         add(topPanel, BorderLayout.NORTH);
 
         // Table
-        String[] columns = {" ", "ID", "대여자", "대여물품", "예약일"};
+        String[] columns = {"예약ID", "사용자ID", "대여자", "대여물품", "예약일"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {

@@ -26,7 +26,7 @@ public class MyReservationPanel extends JPanel {
 
     private void initComponents() {
         // 테이블 초기화
-        String[] columns = {"예약번호", "물품분류", "물품명", "예약일", "상태"};
+        String[] columns = {"예약ID", "물품분류", "물품명", "예약일", "상태"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {

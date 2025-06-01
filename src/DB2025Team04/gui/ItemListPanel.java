@@ -45,7 +45,7 @@ public class ItemListPanel extends JPanel {
         searchPanel.add(resetButton);
 
         // Table
-        String[] columns = {"ID", "분류", "물품이름", "전체수량", "대여가능수량"};
+        String[] columns = {"물품ID", "분류", "물품이름", "전체수량", "대여가능수량"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
