@@ -121,7 +121,6 @@ public class MainWindow extends JFrame {
             });
         }
         add(tabbedPane, BorderLayout.CENTER);
-        add(statusPanel, BorderLayout.SOUTH);
 
         JMenuBar menuBar = createMenuBar();
         setJMenuBar(menuBar);
