@@ -114,11 +114,16 @@ public class ItemDialog extends JDialog {
         // 확인 버튼 이벤트
         okButton.addActionListener(e -> {
             if (validateInputs()) {
-                boolean success;
-                if (isEditMode) {
-                    success = updateItemInDatabase();
-                } else {
-                    success = addItemToDatabase();
+                boolean success = false; // success 변수 초기화
+                try { // try-catch 블록 추가
+                    if (isEditMode) {
+                        success = updateItemInDatabase();
+                    } else {
+                        success = addItemToDatabase();
+                    }
+                } catch (SQLException ex) { // SQLException 처리
+                    JOptionPane.showMessageDialog(this, "데이터베이스 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
+                    ex.printStackTrace();
                 }
                 
                 if (success) {
@@ -170,7 +175,7 @@ public class ItemDialog extends JDialog {
     }
 
     // 수정 기능 추가
-    private boolean updateItemInDatabase() {
+    private boolean updateItemInDatabase() throws SQLException {
         Connection conn = null;
         PreparedStatement stmt = null;
 
@@ -190,17 +195,19 @@ public class ItemDialog extends JDialog {
             int result = stmt.executeUpdate();
             
             if (result > 0) {
+                conn.commit(); // 트랜잭션 커밋
                 JOptionPane.showMessageDialog(this, "물품이 성공적으로 수정되었습니다.", "수정 완료", JOptionPane.INFORMATION_MESSAGE);
                 return true;
             } else {
+                conn.rollback(); // 오류 발생 시 롤백
                 JOptionPane.showMessageDialog(this, "물품 수정에 실패했습니다.", "오류", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
 
-            conn.commit(); // 트랜잭션 커밋
-            return true;
         } catch (SQLException e) {
-            if (conn != null) conn.rollback(); // 오류 발생 시 롤백
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            }
             JOptionPane.showMessageDialog(this, "데이터베이스 오류: " + e.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
             return false;
@@ -240,17 +247,19 @@ public class ItemDialog extends JDialog {
             int result = stmt.executeUpdate();
             
             if (result > 0) {
+                conn.commit(); // 트랜잭션 커밋
                 JOptionPane.showMessageDialog(this, "물품이 성공적으로 추가되었습니다.", "추가 완료", JOptionPane.INFORMATION_MESSAGE);
                 return true;
             } else {
+                conn.rollback(); // 오류 발생 시 롤백
                 JOptionPane.showMessageDialog(this, "물품 추가에 실패했습니다.", "오류", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
 
-            conn.commit(); // 트랜잭션 커밋
-            return true;
         } catch (SQLException e) {
-            if (conn != null) conn.rollback(); // 오류 발생 시 롤백
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            }
             JOptionPane.showMessageDialog(this, "데이터베이스 오류: " + e.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
             return false;
