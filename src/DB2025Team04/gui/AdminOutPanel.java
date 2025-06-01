@@ -67,8 +67,8 @@ public class AdminOutPanel extends JPanel {
 
         // 버튼 패널 생성 및 버튼 추가
         JPanel buttonPanel = new JPanel();
-        doneButton = new JButton("출고 완료");
-        cancelButton = new JButton("출고 취소");
+        doneButton = new JButton("대여 승인");
+        cancelButton = new JButton("대여 취소");
 
         // 초기 상태에서는 버튼 비활성화
         doneButton.setEnabled(false);
@@ -77,35 +77,35 @@ public class AdminOutPanel extends JPanel {
         buttonPanel.add(doneButton);
         buttonPanel.add(cancelButton);
 
-        // 출고 완료 버튼 클릭 시 이벤트 처리
+        // 대여 승인 버튼 클릭 시 이벤트 처리
         doneButton.addActionListener(e -> {
             int selectedRow = itemTable.getSelectedRow();
             if (selectedRow != -1) {
                 int rentId = (int) tableModel.getValueAt(selectedRow, 0);
-                // 출고처리
+                // 대여 승인
                 if (DatabaseManager.getInstance().processOutDone(rentId)) {
-                    JOptionPane.showMessageDialog(this, "출고가 완료되었습니다.");
+                    JOptionPane.showMessageDialog(this, "대여 신청이 승인되었습니다.");
                     loadItemList(); // 목록 새로고침
                 } else {
-                    JOptionPane.showMessageDialog(this, "출고 처리 중 오류가 발생했습니다.", "오류", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "승인 처리 중 오류가 발생했습니다.", "오류", JOptionPane.ERROR_MESSAGE);
                 }
             } else {
                 // 행이 선택되지 않은 경우 경고 메시지
-                JOptionPane.showMessageDialog(this, "출고할 물품을 선택하세요.", "경고", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "승인할 대여 신청을 선택하세요.", "경고", JOptionPane.WARNING_MESSAGE);
             }
         });
 
-        // 출고 취소 버튼 클릭 시 이벤트 처리
+        // 대여 취소 버튼 클릭 시 이벤트 처리
         cancelButton.addActionListener(e -> {
             int selectedRow = itemTable.getSelectedRow();
             if (selectedRow != -1) {
                 int rentId = (int) tableModel.getValueAt(selectedRow, 0);
-                // 출고취소 -> 예약 삭제
+                // 대여 취소
                 if (DatabaseManager.getInstance().processDeleteRent(rentId)) {
-                    JOptionPane.showMessageDialog(this, "출고가 취소되었습니다.");
+                    JOptionPane.showMessageDialog(this, "대여 신청이 취소되었습니다.");
                     loadItemList(); // 목록 새로고침
                 } else {
-                    JOptionPane.showMessageDialog(this, "출고 취소 중 오류가 발생했습니다.", "오류", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "취소 처리 중 오류가 발생했습니다.", "오류", JOptionPane.ERROR_MESSAGE);
                 }
             } else {
                 // 행이 선택되지 않은 경우 경고 메시지
