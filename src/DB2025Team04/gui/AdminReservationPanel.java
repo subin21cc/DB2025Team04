@@ -118,8 +118,16 @@ public class AdminReservationPanel extends JPanel {
         try {
             conn = DatabaseManager.getInstance().getConnection();
 
-            String sql = "SELECT reservation_id, user_id, user_name, item_name, reserve_date " +
-                         "FROM VIEW_RESERVATION_OVERVIEW WHERE 1=1";
+            String sql = "SELECT \n" +
+                    "    r.reservation_id,\n" +
+                    "    r.user_id,\n" +
+                    "    u.user_name,\n" +
+                    "    i.item_name,\n" +
+                    "    r.reserve_date \n" +
+                    "FROM DB2025_RESERVATION r\n" +
+                    "JOIN DB2025_USER u ON r.user_id = u.user_id\n" +
+                    "JOIN DB2025_ITEMS i ON r.item_id = i.item_id\n" +
+                    "WHERE 1=1";
             String keyword = searchField.getText().trim();
             String date = dateSearchField.getText().trim();
 
