@@ -110,14 +110,6 @@ CREATE TABLE DB2025_RENT_LOG
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
--- 대여 로그 인덱스 생성
-CREATE INDEX idx_rent_log_rent_id ON DB2025_RENT_LOG (rent_id);
-CREATE INDEX idx_rent_log_user_id ON DB2025_RENT_LOG (user_id);
-CREATE INDEX idx_rent_log_item_id ON DB2025_RENT_LOG (item_id);
-CREATE INDEX idx_rent_log_date ON DB2025_RENT_LOG (log_date);
-CREATE INDEX idx_rent_log_status ON DB2025_RENT_LOG (previous_status, current_status);
-CREATE INDEX idx_rent_log_op_type ON DB2025_RENT_LOG (operation_type);
-
 
 -- 뷰 생성
 -- 대여 물품 현황 뷰: 전체 수량, 사용 가능 수량과 현재 대여 중인 수를 함께 표시
@@ -261,6 +253,15 @@ CREATE INDEX idx_rent_status ON DB2025_RENT (rent_status);
 CREATE INDEX idx_item_category ON DB2025_ITEMS (category);
 CREATE INDEX idx_rent_user_status_due ON DB2025_RENT (user_id, rent_status, due_date);
 
+-- 대여 로그 인덱스 생성
+CREATE INDEX idx_rent_log_rent_id ON DB2025_RENT_LOG (rent_id);
+CREATE INDEX idx_rent_log_user_id ON DB2025_RENT_LOG (user_id);
+CREATE INDEX idx_rent_log_item_id ON DB2025_RENT_LOG (item_id);
+CREATE INDEX idx_rent_log_date ON DB2025_RENT_LOG (log_date);
+CREATE INDEX idx_rent_log_status ON DB2025_RENT_LOG (previous_status, current_status);
+CREATE INDEX idx_rent_log_op_type ON DB2025_RENT_LOG (operation_type);
+
+
 -- 사용자 데이터
 INSERT INTO DB2025_USER (user_id, user_pw, user_name, user_dep, user_phone, user_status) VALUES
     (2025001, SHA2('pw1234',256), '김철수', '컴퓨터공학과', '010-1111-2222', '대여가능'),
@@ -294,10 +295,6 @@ INSERT INTO DB2025_ITEMS (item_id, item_name, quantity, available_quantity, cate
 
 -- 대여 데이터
 -- 현재 날짜 기준으로 다양한 대여 상태의 데이터 삽입
-
--- 기존 데이터 삭제 (나중에 지워야 함)
-DELETE FROM DB2025_RENT;
-DELETE FROM DB2025_RESERVATION;
 
 -- 예약 데이터 삽입
 INSERT INTO DB2025_RESERVATION (user_id, item_id, reserve_date) VALUES

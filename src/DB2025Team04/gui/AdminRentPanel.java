@@ -290,6 +290,7 @@ public class AdminRentPanel extends JPanel {
         try {
             conn = DatabaseManager.getInstance().getConnection();
             // idx_user_status_due, idx_rent_status 인덱스 사용
+            // VIEW_USER_RENTAL_OVERVIEW 뷰 사용
             String sql = "SELECT user_id, user_name, active_rental_count, overdue_count, rented_items " +
                     "FROM VIEW_USER_RENTAL_OVERVIEW " +
                     "ORDER BY overdue_count DESC";
