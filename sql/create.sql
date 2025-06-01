@@ -114,7 +114,7 @@ CREATE TABLE DB2025_RENT_LOG
 -- 뷰 생성
 
 -- 대여 현황 뷰: 대여 상태별로 물품의 대여 현황을 집계
-CREATE VIEW VIEW_USER_RENT_STATUS AS
+CREATE VIEW DB2025_VIEW_USER_RENT_STATUS AS
 SELECT
     r.rent_id,
     r.item_id,
@@ -133,7 +133,7 @@ FROM DB2025_RENT r
          JOIN DB2025_ITEMS i ON i.item_id = r.item_id;
 
 -- 사용자별 대여 현황 뷰: 각 사용자가 현재 몇 건을 대여 중인지, 연체 건수와 대여 물품명을 나열
-CREATE VIEW VIEW_USER_RENTAL_OVERVIEW AS
+CREATE VIEW DB2025_VIEW_USER_RENTAL_OVERVIEW AS
 SELECT
     U.user_id,
     U.user_name,

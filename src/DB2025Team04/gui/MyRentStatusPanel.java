@@ -42,9 +42,9 @@ public class MyRentStatusPanel extends JPanel {
         try {
             conn = DatabaseManager.getInstance().getConnection();
 
-            // VIEW_USER_RENT_STATUS 뷰 사용
+            // DB2025_VIEW_USER_RENT_STATUS 뷰 사용
             String sql = "SELECT rent_id, item_id, category, item_name, borrow_date, return_date, rent_status " +
-                    "FROM VIEW_USER_RENT_STATUS " +
+                    "FROM DB2025_VIEW_USER_RENT_STATUS " +
                     "WHERE user_id = ? " +
                     "ORDER BY borrow_date DESC";
 
