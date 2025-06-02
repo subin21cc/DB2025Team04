@@ -1,23 +1,22 @@
 package DB2025Team04.gui;
 
-import DB2025Team04.db.DatabaseManager;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+// 사용자 추가/수정 다이얼로그 클래스
 public class UserDialog extends JDialog {
-    private JTextField userIdField;
-    private JPasswordField passwordField;
-    private JTextField nameField;
-    private JTextField departmentField;
-    private JTextField phoneField;
-    private JComboBox<String> statusCombo;
-    private JCheckBox adminCheckBox;
+    private JTextField userIdField; // 사용자 ID 입력 필드
+    private JPasswordField passwordField; // 비밀번호 입력 필드
+    private JTextField nameField; // 이름 입력 필드
+    private JTextField departmentField; // 학과 입력 필드
+    private JTextField phoneField; // 전화번호 입력 필드
+    private JComboBox<String> statusCombo; // 상태 선택 콤보박스 (대여가능, 대여불가)
+    private JCheckBox adminCheckBox; // 관리자 권한 체크박스
     
-    private boolean isEditing;
-    private boolean isConfirmed = false;
+    private boolean isEditing; // 수정 모드 여부
+    private boolean isConfirmed = false; // 확인 버튼 클릭 여부
     
     // 사용자 추가 시 사용하는 생성자
     public UserDialog(Window owner, String title) {
@@ -33,8 +32,8 @@ public class UserDialog extends JDialog {
         super(owner, title, ModalityType.APPLICATION_MODAL);
         this.isEditing = true;
         initComponents();
-        
-        // 기존 데이터 채우기
+
+        // 기존 사용자 정보 입력 필드에 세팅
         userIdField.setText(String.valueOf(userId));
         userIdField.setEditable(false); // ID는 수정 불가
         passwordField.setText(""); // 비밀번호는 빈칸으로 시작 (변경하지 않으려면 비워둠)
@@ -73,10 +72,7 @@ public class UserDialog extends JDialog {
         gbc.gridx = 1;
         passwordField = new JPasswordField(20);
         inputPanel.add(passwordField, gbc);
-        
-//        if (isEditing) {
-//            inputPanel.add(new JLabel("(변경 시에만 입력)"), gbc);
-//        }
+
         // "(변경 시에만 입력)" 라벨 추가
         gbc.gridx = 2; // 같은 행의 오른쪽에 위치하도록 설정
         gbc.gridy = 1; // 비밀번호 필드와 같은 행
@@ -92,10 +88,10 @@ public class UserDialog extends JDialog {
         nameField = new JTextField(20);
         inputPanel.add(nameField, gbc);
         
-        // 부서
+        // 학과
         gbc.gridx = 0;
         gbc.gridy = 3;
-        inputPanel.add(new JLabel("부서:"), gbc);
+        inputPanel.add(new JLabel("학과:"), gbc);
         
         gbc.gridx = 1;
         departmentField = new JTextField(20);
@@ -132,7 +128,8 @@ public class UserDialog extends JDialog {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton confirmButton = new JButton("확인");
         JButton cancelButton = new JButton("취소");
-        
+
+        // 확인 버튼 클릭 시 입력값 검증 후 다이얼로그 종료
         confirmButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -142,7 +139,8 @@ public class UserDialog extends JDialog {
                 }
             }
         });
-        
+
+        // 취소 버튼 클릭 시 다이얼로그 종료
         cancelButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -157,13 +155,15 @@ public class UserDialog extends JDialog {
         add(inputPanel, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.SOUTH);
     }
-    
+
+    // 다이얼로그 설정
     private void setupDialog() {
         setSize(400, 350);
         setLocationRelativeTo(getOwner());
         setResizable(false);
     }
-    
+
+    // 입력값 검증 메소드
     private boolean validateInput() {
         // 사용자 ID 검증
         if (userIdField.getText().trim().isEmpty()) {
@@ -190,9 +190,9 @@ public class UserDialog extends JDialog {
             return false;
         }
         
-        // 부서 검증
+        // 학과 검증
         if (departmentField.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "부서를 입력하세요.", "입력 오류", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "학과를 입력하세요.", "입력 오류", JOptionPane.ERROR_MESSAGE);
             return false;
         }
         
@@ -210,11 +210,11 @@ public class UserDialog extends JDialog {
         
         return true;
     }
-    
+    // 확인 여부 반환
     public boolean isConfirmed() {
         return isConfirmed;
     }
-    
+    // 입력값 반환 메소드들
     public int getUserId() {
         return Integer.parseInt(userIdField.getText().trim());
     }

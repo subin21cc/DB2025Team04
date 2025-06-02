@@ -5,18 +5,21 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+// 사용자 비밀번호 변경 대화상자 클래스
 public class UserPasswordDialog extends JDialog {
-    private JPasswordField currentPasswordField;
-    private JPasswordField newPasswordField;
-    private JPasswordField confirmPasswordField;
-    private boolean isConfirmed = false;
-    
+    private JPasswordField currentPasswordField; // 현재 비밀번호 입력 필드
+    private JPasswordField newPasswordField; // 새 비밀번호 입력 필드
+    private JPasswordField confirmPasswordField; // 새 비밀번호 확인 입력 필드
+    private boolean isConfirmed = false; // 확인 버튼 클릭 여부
+
+    // 생성자: 다이얼로그 Ui 초기화
     public UserPasswordDialog(Window owner, String title) {
         super(owner, title, ModalityType.APPLICATION_MODAL);
         initComponents();
         setupDialog();
     }
-    
+
+    // UI 컴포넌트 초기화
     private void initComponents() {
         setLayout(new BorderLayout());
         
@@ -57,7 +60,8 @@ public class UserPasswordDialog extends JDialog {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton confirmButton = new JButton("확인");
         JButton cancelButton = new JButton("취소");
-        
+
+        // 확인 버튼 클릭 시 입력값 검증 후 다이얼로그 종료
         confirmButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -67,7 +71,8 @@ public class UserPasswordDialog extends JDialog {
                 }
             }
         });
-        
+
+        // 취소 버튼 클릭 시 다이얼로그 종료
         cancelButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -82,13 +87,15 @@ public class UserPasswordDialog extends JDialog {
         add(inputPanel, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.SOUTH);
     }
-    
+
+    // 다이얼로그 설정
     private void setupDialog() {
         setSize(400, 200);
         setLocationRelativeTo(getOwner());
         setResizable(false);
     }
-    
+
+    // 입력값 검증 메소드
     private boolean validateInput() {
         // 현재 비밀번호 검증
         if (currentPasswordField.getPassword().length == 0) {
@@ -119,15 +126,16 @@ public class UserPasswordDialog extends JDialog {
         
         return true;
     }
-    
+
+    // 확인 여부 반환
     public boolean isConfirmed() {
         return isConfirmed;
     }
-    
+    // 룐쟈 비밀번호 반환
     public String getCurrentPassword() {
         return new String(currentPasswordField.getPassword());
     }
-    
+    // 새 비밀번호 반환
     public String getNewPassword() {
         return new String(newPasswordField.getPassword());
     }
