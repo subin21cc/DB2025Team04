@@ -1,8 +1,6 @@
 package DB2025Team04.gui;
 
 import DB2025Team04.db.DatabaseManager;
-import DB2025Team04.util.SessionManager;
-
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -19,10 +17,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 
-/**
- * 관리자 대여 현황/반납처리 패널 클래스
- * - 대여 상세/사용자 요약 보기, 대여상태별 필터, 반납처리 기능 제공
- */
+/*
+관리자 대여 현황/반납처리 패널 클래스
+대여 상세/사용자 요약 보기, 대여상태별 필터, 반납처리 기능 제공
+*/
 public class AdminRentPanel extends JPanel {
     private JTable itemTable; // 대여 목록을 보여주는 테이블
     private DefaultTableModel tableModel; // 테이블에 표시될 데이터 모델
@@ -38,17 +36,17 @@ public class AdminRentPanel extends JPanel {
     private JCheckBox checkBox4;
     private JCheckBox checkBox5;
 
-    /**
-     * 패널 생성자. 레이아웃 설정 및 UI 컴포넌트 초기화
-     */
+    /*
+    패널 생성자. 레이아웃 설정 및 UI 컴포넌트 초기화
+    */
     public AdminRentPanel() {
         setLayout(new BorderLayout());
         initComponents(); // UI 컴포넌트 초기화
     }
 
-    /**
-     * UI 컴포넌트(라디오, 체크박스, 테이블, 버튼 등) 초기화 및 이벤트 리스너 등록
-     */
+    /*
+    UI 컴포넌트(라디오, 체크박스, 테이블, 버튼 등) 초기화 및 이벤트 리스너 등록
+    */
     private void initComponents() {
         // 상단 패널(라디오, 필터) 생성
         JPanel topPanel = new JPanel();
@@ -195,15 +193,15 @@ public class AdminRentPanel extends JPanel {
             }
         });
 
-        // 대여중/연체중이 아닌 경우 경고
+        // 테이블 스크롤 패널 추가 및 버튼 패널 하단 배치
         JScrollPane scrollPane = new JScrollPane(itemTable);
         add(scrollPane, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
-    /**
-     * 대여상태별 필터에 따라 대여 상세 목록을 DB에서 불러와 테이블에 표시
-     */
+    /*
+    대여상태별 필터에 따라 대여 상세 목록을 DB에서 불러와 테이블에 표시
+    */
     public void loadItemList() {
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -225,6 +223,7 @@ public class AdminRentPanel extends JPanel {
             }
             conn = DatabaseManager.getInstance().getConnection();
 
+            // IN 절에 맞게 ? 개수 생성
             String sql;
             String inClause = String.join(",", Collections.nCopies(selectedStatuses.size(), "?"));
             sql = "SELECT r.rent_id, i.category, i.item_name, " +
@@ -236,6 +235,7 @@ public class AdminRentPanel extends JPanel {
                     "ORDER BY r.borrow_date DESC";
             stmt = conn.prepareStatement(sql);
 
+            // 선택된 상태를 쿼리 파라미터로 바인딩
             for (int i = 0; i < selectedStatuses.size(); i++) {
                 stmt.setString(i + 1, selectedStatuses.get(i));
             }
@@ -262,6 +262,7 @@ public class AdminRentPanel extends JPanel {
                 }
                 row.add(returnDate);
                 row.add(rs.getString("rent_status"));
+                // 연체중인 경우 경과일수 계산
                 if ("연체중".equals(rs.getString("rent_status"))) {
                     LocalDate borrowDate = rs.getDate("borrow_date").toLocalDate();
                     LocalDate returnDateLocal = rs.getDate("return_date") != null ? rs.getDate("return_date").toLocalDate() : LocalDate.now();
@@ -282,6 +283,9 @@ public class AdminRentPanel extends JPanel {
         }
     }
 
+    /*
+    사용자별 대여/연체 요약 정보를 DB에서 불러와 테이블에 표시
+    */
     public void loadUserOverview() {
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -290,6 +294,7 @@ public class AdminRentPanel extends JPanel {
         try {
             conn = DatabaseManager.getInstance().getConnection();
             // DB2025_VIEW_USER_RENTAL_OVERVIEW 뷰 사용
+            // 사용자별 대여/연체 요약 뷰 조회
             String sql = "SELECT user_id, user_name, active_rental_count, overdue_count, rented_items " +
                     "FROM DB2025_VIEW_USER_RENTAL_OVERVIEW " +
                     "ORDER BY overdue_count DESC";

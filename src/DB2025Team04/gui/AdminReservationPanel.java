@@ -1,47 +1,47 @@
 package DB2025Team04.gui;
 
 import DB2025Team04.db.DatabaseManager;
-import DB2025Team04.util.SessionManager;
-
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.awt.event.ItemListener;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Vector;
 
-
+/*
+관리자 예약 현황 조회 패널 클래스
+검색(아이디/이름/물품/날짜) 기능과 예약 목록 테이블 제공
+*/
 public class AdminReservationPanel extends JPanel {
-    private JTable itemTable;
-    private DefaultTableModel tableModel;
-    private JTextField searchField;
-    private JComboBox<String> searchTypeCombo;
-    private JTextField dateSearchField;
+    private JTable itemTable; // 예약 목록을 보여주는 테이블
+    private DefaultTableModel tableModel; // 테이블 데이터 모델
+    private JTextField searchField; // 통합 검색어 입력 필드
+    private JComboBox<String> searchTypeCombo; // 검색 항목 선택 콤보박스
+    private JTextField dateSearchField; // 예약일 검색 입력 필드
 
-
+    /*
+    패널 생성자. 레이아웃 설정 및 UI 초기화
+    */
     public AdminReservationPanel() {
         setLayout(new BorderLayout());
         initComponents();
     }
 
+    /*
+    UI 컴포넌트(검색, 테이블 등) 초기화 및 이벤트 리스너 등록
+    */
     private void initComponents() {
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new GridLayout(2, 1));
 
-        // 검색 패널
+        // 검색 패널(검색 항목, 검색어, 버튼)
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        // 예약일 검색 패널
         JPanel dateSearchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
         searchField = new JTextField(20);
@@ -66,13 +66,13 @@ public class AdminReservationPanel extends JPanel {
             }
         });
 
-        // 통합 검색 버튼
+        // 검색 버튼: 조건에 맞는 예약 목록 조회
         JButton searchButton = new JButton("검색");
         searchButton.addActionListener(e -> {
             loadItemList();
         });
 
-        // 통합 초기화 버튼
+        // 검색 초기화 버튼: 입력값 초기화 및 전체 목록 조회
         JButton resetButton = new JButton("검색 초기화");
         resetButton.addActionListener(e -> {
             searchField.setText("");
@@ -95,7 +95,7 @@ public class AdminReservationPanel extends JPanel {
         topPanel.add(dateSearchPanel);
         add(topPanel, BorderLayout.NORTH);
 
-        // Table
+        // 예약 목록 테이블 생성
         String[] columns = {"예약ID", "사용자ID", "대여자", "대여물품", "예약일"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -110,6 +110,9 @@ public class AdminReservationPanel extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
     }
 
+    /*
+    검색 조건(아이디/이름/물품/날짜)에 따라 예약 목록을 DB에서 조회하여 테이블에 표시
+    */
     public void loadItemList() {
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -118,6 +121,7 @@ public class AdminReservationPanel extends JPanel {
         try {
             conn = DatabaseManager.getInstance().getConnection();
 
+            // 기본 쿼리(예약 뷰)
             String sql = "SELECT \n" +
                     "    r.reservation_id,\n" +
                     "    r.user_id,\n" +
@@ -131,6 +135,7 @@ public class AdminReservationPanel extends JPanel {
             String keyword = searchField.getText().trim();
             String date = dateSearchField.getText().trim();
 
+            // 검색어가 있을 때 검색 항목별 조건 추가
             if (!keyword.isEmpty()) {
                 switch (searchTypeCombo.getSelectedIndex()) {
                     case 0:
@@ -151,6 +156,7 @@ public class AdminReservationPanel extends JPanel {
             sql += " ORDER BY reservation_id";
             stmt = conn.prepareStatement(sql);
 
+            // 파라미터 바인딩
             int paramIndex = 1;
             if (!keyword.isEmpty()) {
                 stmt.setString(paramIndex++, "%" + keyword + "%");
@@ -163,6 +169,7 @@ public class AdminReservationPanel extends JPanel {
             tableModel.setRowCount(0);
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
+            // 결과를 테이블에 추가
             while (rs.next()) {
                 Vector<Object> row = new Vector<>();
                 row.add(rs.getInt("reservation_id"));

@@ -12,22 +12,32 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Vector;
 
+/*
+관리자 사용자 관리 패널 클래스
+검색, 사용자 추가/수정/삭제 기능 및 사용자 목록 테이블 제공
+*/
 public class AdminUserPanel extends JPanel {
-    private JTable userTable;
-    private DefaultTableModel tableModel;
-    private JTextField searchField;
-    private JComboBox<String> searchTypeCombo;
-    private boolean isSearching = false;
-    private JButton adminAddButton;
-    private JButton adminEditButton;
-    private JButton adminRemoveButton;
+    private JTable userTable; // 사용자 목록을 보여주는 테이블
+    private DefaultTableModel tableModel; // 테이블에 표시될 데이터 모델
+    private JTextField searchField; // 검색어 입력 필드
+    private JComboBox<String> searchTypeCombo; // 검색 항목 선택 콤보박스
+    private boolean isSearching = false; // 검색 상태 여부
+    private JButton adminAddButton; // 사용자 추가 버튼
+    private JButton adminEditButton; // 사용자 수정 버튼
+    private JButton adminRemoveButton; // 사용자 삭제 버튼
 
+    /*
+    패널 생성자. 레이아웃 설정 및 UI 초기화, 사용자 목록 로드
+    */
     public AdminUserPanel() {
         setLayout(new BorderLayout());
         initComponents();
         loadUserList();
     }
 
+    /*
+    UI 컴포넌트(검색, 테이블, 버튼 등) 초기화 및 이벤트 리스너 등록
+    */
     private void initComponents() {
         // 검색 패널
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -44,7 +54,7 @@ public class AdminUserPanel extends JPanel {
         searchPanel.add(searchButton);
         searchPanel.add(resetButton);
 
-        // 테이블
+        // 사용자 목록 테이블 및 모델 생성
         String[] columns = {"사용자ID", "이름", "학과", "전화번호", "상태", "관리자여부"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -72,7 +82,7 @@ public class AdminUserPanel extends JPanel {
         buttonPanel.add(adminEditButton);
         buttonPanel.add(adminRemoveButton);
 
-        // 테이블 선택 이벤트
+        // 테이블 행 선택 시 수정/삭제 버튼 활성화
         userTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 int selectedRow = userTable.getSelectedRow();
@@ -83,7 +93,7 @@ public class AdminUserPanel extends JPanel {
             }
         });
 
-        // 버튼 이벤트 핸들러
+        // 사용자 추가 버튼 클릭 시 다이얼로그 표시 및 DB 추가
         adminAddButton.addActionListener(e -> {
             UserDialog userDialog = new UserDialog(SwingUtilities.getWindowAncestor(this), "사용자 관리 - 추가");
             userDialog.setVisible(true);
@@ -108,6 +118,7 @@ public class AdminUserPanel extends JPanel {
             }
         });
 
+        // 사용자 수정 버튼 클릭 시 다이얼로그 표시 및 DB 수정
         adminEditButton.addActionListener(e -> {
             int selectedRow = userTable.getSelectedRow();
             if (selectedRow != -1) {
@@ -146,6 +157,7 @@ public class AdminUserPanel extends JPanel {
             }
         });
 
+        // 사용자 삭제 버튼 클릭 시 확인 후 DB 삭제
         adminRemoveButton.addActionListener(e -> {
             int selectedRow = userTable.getSelectedRow();
             if (selectedRow != -1) {
@@ -189,6 +201,10 @@ public class AdminUserPanel extends JPanel {
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
+    /*
+    사용자 목록을 DB에서 조회하여 테이블에 표시
+    (검색 모드일 경우 검색 조건 반영)
+    */
     public void loadUserList() {
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -202,6 +218,7 @@ public class AdminUserPanel extends JPanel {
                         "FROM DB2025_USER u " +
                         "LEFT JOIN DB2025_ADMIN a ON u.user_id = a.user_id ";
 
+            // 검색 모드일 때 WHERE 조건 추가
             if (isSearching) {
                 switch (searchTypeCombo.getSelectedIndex()) {
                     case 0: // ID
@@ -220,6 +237,7 @@ public class AdminUserPanel extends JPanel {
 
             stmt = conn.prepareStatement(sql);
 
+            // 검색어가 있을 때 파라미터 설정
             if (isSearching && !searchField.getText().isEmpty()) {
                 stmt.setString(1, "%" + searchField.getText() + "%");
             }
@@ -228,6 +246,7 @@ public class AdminUserPanel extends JPanel {
 
             tableModel.setRowCount(0);
 
+            // 결과를 테이블에 추가
             while (rs.next()) {
                 Vector<Object> row = new Vector<>();
                 row.add(rs.getInt("user_id"));
@@ -248,11 +267,17 @@ public class AdminUserPanel extends JPanel {
         }
     }
 
+    /*
+   검색 버튼 클릭 시 검색 모드로 전환 후 목록 로드
+   */
     private void searchUsers() {
         isSearching = true;
         loadUserList();
     }
 
+    /*
+    검색 초기화 버튼 클릭 시 검색 모드 해제 및 전체 목록 로드
+    */
     private void resetSearch() {
         isSearching = false;
         searchField.setText("");

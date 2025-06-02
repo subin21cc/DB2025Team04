@@ -12,9 +12,9 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Vector;
 
-/**
- * 관리자 출고(대여신청 승인/취소) 패널 클래스
- * 대여신청 상태의 대여 목록을 조회하고, 출고 완료/취소 처리를 할 수 있다.
+/*
+관리자 출고(대여신청 승인/취소) 패널 클래스
+대여신청 상태의 대여 목록을 조회하고, 출고 완료/취소 처리를 할 수 있다.
  */
 public class AdminOutPanel extends JPanel {
     private JTable itemTable; // 대여신청 목록을 보여주는 테이블
@@ -22,17 +22,17 @@ public class AdminOutPanel extends JPanel {
     private JButton doneButton; // 출고 완료 버튼
     private JButton cancelButton; // 출고 취소 버튼
 
-    /**
-     * 패널 생성자. 레이아웃 설정 및 UI 컴포넌트 초기화.
-     */
+    /*
+    패널 생성자. 레이아웃 설정 및 UI 컴포넌트 초기화.
+    */
     public AdminOutPanel() {
         setLayout(new BorderLayout());
         initComponents(); // UI 컴포넌트 초기화
     }
 
-    /**
-     * UI 컴포넌트(테이블, 버튼 등) 초기화 및 이벤트 리스너 등록
-     */
+    /*
+    UI 컴포넌트(테이블, 버튼 등) 초기화 및 이벤트 리스너 등록
+    */
     private void initComponents() {
         // 테이블 컬럼명 정의: 대여ID, 분류, 이름, 대여자, 대여일
         String[] columns = {"대여ID", "분류", "이름", "대여자", "대여일"};
@@ -117,10 +117,10 @@ public class AdminOutPanel extends JPanel {
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
-    /**
-     * 대여신청 상태의 대여 목록을 DB에서 불러와 테이블에 표시
-     * (출고 완료/취소 후에도 호출하여 목록을 갱신)
-     */
+    /*
+    대여신청 상태의 대여 목록을 DB에서 불러와 테이블에 표시
+    (출고 완료/취소 후에도 호출하여 목록을 갱신)
+    */
     public void loadItemList() {
         Connection conn = null;
         PreparedStatement stmt = null;
