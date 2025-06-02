@@ -16,19 +16,21 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Vector;
 
+// 대여 로그를 보여주는 다이얼로그 클래스
 public class RentLogDialog extends JDialog {
-    private JTable logTable;
-    private DefaultTableModel tableModel;
-    private JComboBox<Integer> pageComboBox;
+    private JTable logTable; // 대여 로그를 보여주는 테이블
+    private DefaultTableModel tableModel; // 테이블에 표시될 데이터 모델
+    private JComboBox<Integer> pageComboBox; // 페이지 네비게이션을 위한 콤보박스
     private JButton firstPageButton;
     private JButton prevPageButton;
     private JButton nextPageButton;
     private JButton lastPageButton;
     
-    private int currentPage = 1;
-    private int totalPages = 1;
-    private final int ROWS_PER_PAGE = 20;
-    
+    private int currentPage = 1; // 현재 페이지
+    private int totalPages = 1; // 총 페이지 수
+    private final int ROWS_PER_PAGE = 20; // 페이지당 표시할 행 수
+
+    // 생성자: 다이얼로그 초기화 및 대여 로그 로드
     public RentLogDialog(Frame owner, String title) {
         super(owner, title, true);
         initComponents();
@@ -36,7 +38,8 @@ public class RentLogDialog extends JDialog {
         setSize(800, 600);
         setLocationRelativeTo(owner);
     }
-    
+
+    // UI 컴포넌트 초기화 메서드
     private void initComponents() {
         // 패널 설정
         setLayout(new BorderLayout());
@@ -75,7 +78,7 @@ public class RentLogDialog extends JDialog {
         nextPageButton = new JButton(">");
         lastPageButton = new JButton(">>");
         
-        // 버튼 액션 리스너 추가
+        // 각 버튼 및 콤보박스에 페이지 이동 이벤트 리스너 등록
         firstPageButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -129,7 +132,7 @@ public class RentLogDialog extends JDialog {
             }
         });
         
-        // 네비게이션 패널에 컴포넌트 추가
+        // 네비게이션 패널에 버튼 미치 콤보박스 추가
         navigationPanel.add(firstPageButton);
         navigationPanel.add(prevPageButton);
         navigationPanel.add(pageComboBox);
@@ -147,9 +150,8 @@ public class RentLogDialog extends JDialog {
         add(buttonPanel, BorderLayout.SOUTH);
     }
     
-    /**
-     * 테이블 열 너비를 설정하는 메서드
-     */
+
+    //테이블 열 너비를 설정하는 메서드
     private void setColumnWidths(JTable table) {
         // 각 열에 대한 적절한 너비 설정
         int[] columnWidths = {60, 150, 100, 100, 120, 80, 150, 90, 90, 90, 70, 200};
@@ -162,7 +164,8 @@ public class RentLogDialog extends JDialog {
             column.setMinWidth(60);
         }
     }
-    
+
+    // 대여 로그 데이터를 DB에서 조회하여 테이블에 표시 (페이징 처리)
     private void loadRentLogs(int page) {
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -237,7 +240,7 @@ public class RentLogDialog extends JDialog {
             
             rs = stmt.executeQuery();
             
-            // 테이블 모델 초기화
+            // 테이블 데이터 초기화 및 결과 추가
             tableModel.setRowCount(0);
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
             SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -281,7 +284,8 @@ public class RentLogDialog extends JDialog {
             DatabaseManager.getInstance().closeResources(conn, stmt, rs);
         }
     }
-    
+
+    // 페이지 콤보박스를 업데이트하여 현재 페이지와 총 페이지 수를 반영
     private void updatePageComboBox() {
         pageComboBox.removeAllItems();
         for (int i = 1; i <= totalPages; i++) {
@@ -289,7 +293,8 @@ public class RentLogDialog extends JDialog {
         }
         pageComboBox.setSelectedItem(currentPage);
     }
-    
+
+    // 페이지 이동 버튼의 활성화/비활성화 상태를 업데이트
     private void updateNavigationButtons() {
         firstPageButton.setEnabled(currentPage > 1);
         prevPageButton.setEnabled(currentPage > 1);

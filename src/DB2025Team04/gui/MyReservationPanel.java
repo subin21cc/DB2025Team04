@@ -13,17 +13,20 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Vector;
 
+// 내 예약 현황을 보여주는 패널 클래스
 public class MyReservationPanel extends JPanel {
-    private JTable reservationTable;
-    private DefaultTableModel tableModel;
-    private JButton cancelButton;
+    private JTable reservationTable; // 예약 목록을 보여주는 테이블
+    private DefaultTableModel tableModel; // 테이블에 표시될 데이터 모델
+    private JButton cancelButton; // 예약 취소 버튼
 
+    // 생성자: 패널 레이아웃 및 컴포넌트 초기화
     public MyReservationPanel() {
         setLayout(new BorderLayout());
         initComponents();
         loadReservationList();
     }
 
+    // 테이블 및 스크롤 패널 등 UI 컴포넌트 초기화
     private void initComponents() {
         // 테이블 초기화
         String[] columns = {"예약ID", "물품분류", "물품명", "예약일", "상태"};
@@ -39,14 +42,14 @@ public class MyReservationPanel extends JPanel {
         JScrollPane scrollPane = new JScrollPane(reservationTable);
         add(scrollPane, BorderLayout.CENTER);
         
-        // 버튼 패널
+        // 버튼 패널 생성 및 추가
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         cancelButton = new JButton("예약 취소");
         cancelButton.setEnabled(false);
         buttonPanel.add(cancelButton);
         add(buttonPanel, BorderLayout.SOUTH);
         
-        // 테이블 선택 이벤트
+        // 테이블 행 선택 시 버튼 활성화/비활성화 처리
         reservationTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 boolean hasSelection = reservationTable.getSelectedRow() != -1;
@@ -54,7 +57,7 @@ public class MyReservationPanel extends JPanel {
             }
         });
         
-        // 예약 취소 버튼 이벤트
+        // 예약 취소 버튼 클릭 이벤트 리스너 등록
         cancelButton.addActionListener(e -> {
             int selectedRow = reservationTable.getSelectedRow();
             if (selectedRow != -1) {
@@ -83,6 +86,7 @@ public class MyReservationPanel extends JPanel {
         });
     }
 
+    // 데이터베이스에서 예약 목록을 조회하여 테이블에 표시
     public void loadReservationList() {
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -90,7 +94,8 @@ public class MyReservationPanel extends JPanel {
         
         try {
             conn = DatabaseManager.getInstance().getConnection();
-            
+
+            // 예약 목록 조회 쿼리
             String sql = "SELECT r.reservation_id, i.category, i.item_name, r.reserve_date, " +
                         "CASE " +
                         "    WHEN i.available_quantity > 0 THEN '대여가능' " +
@@ -107,7 +112,8 @@ public class MyReservationPanel extends JPanel {
             
             tableModel.setRowCount(0); // 기존 데이터 초기화
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            
+
+            // 결과를 테이블에 한 행씩 추가
             while (rs.next()) {
                 Vector<Object> row = new Vector<>();
                 row.add(rs.getInt("reservation_id"));
@@ -127,7 +133,8 @@ public class MyReservationPanel extends JPanel {
             DatabaseManager.getInstance().closeResources(conn, stmt, rs);
         }
     }
-    
+
+    // 예약 취소 메소드: 예약 ID를 받아 해당 예약을 취소
     private boolean cancelReservation(int reservationId) {
         Connection conn = null;
         PreparedStatement stmt = null;
