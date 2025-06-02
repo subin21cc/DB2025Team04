@@ -5,7 +5,6 @@ import DB2025Team04.util.SessionManager;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.TimeZone;
 
 public class DatabaseManager {
@@ -99,6 +98,7 @@ public class DatabaseManager {
             conn = getConnection();
             conn.setAutoCommit(false); // 트랜잭션 시작
 
+
             // 0. 대여 가능 여부 확인
             // idx_item_user_status 인덱스 사용
             String checkSql = "SELECT count(*) FROM DB2025_RENT USE INDEX (idx_item_user_status) "
@@ -112,13 +112,15 @@ public class DatabaseManager {
             }
 
             // 물품 및 사용자 정보 조회
-            String getInfoSql = "SELECT i.item_name, i.category, i.available_quantity, i.quantity, " +
-                           "u.user_name, u.user_dep " +
-                           "FROM DB2025_ITEMS i, DB2025_USER u " +
-                           "WHERE i.item_id = ? AND u.user_id = ?";
-            stmt = conn.prepareStatement(getInfoSql);
-            stmt.setInt(1, itemId);
-            stmt.setInt(2, userId);
+
+            stmt = conn.prepareStatement("SELECT i.item_name, i.category, i.available_quantity, i.quantity, u.user_name, u.user_dep FROM DB2025_ITEMS i, DB2025_USER u WHERE i.item_id = ? AND u.user_id = ?");
+
+            stmt.setInt(1, itemId);  // item_name용
+            stmt.setInt(2, itemId);  // category용
+            stmt.setInt(3, itemId);  // available_quantity용
+            stmt.setInt(4, itemId);  // quantity용
+            stmt.setInt(5, userId);  // user_name용
+            stmt.setInt(6, userId);  // user_dep용
             rs = stmt.executeQuery();
 
             if (!rs.next()) {
@@ -985,10 +987,12 @@ public class DatabaseManager {
                 for (Integer userId : overdueUserIds) {
                     // 예약 목록 조회
                     String getReservationsSql =
-                            "SELECT r.reservation_id, r.item_id, i.item_name, i.category, u.user_name, u.user_dep " +
+                            "SELECT r.reservation_id, r.item_id, " +
+                                    "(SELECT i.item_name FROM DB2025_ITEMS i WHERE i.item_id = r.item_id) as item_name, " +
+                                    "(SELECT i.category FROM DB2025_ITEMS i WHERE i.item_id = r.item_id) as category, " +
+                                    "(SELECT u.user_name FROM DB2025_USER u WHERE u.user_id = r.user_id) as user_name, " +
+                                    "(SELECT u.user_dep FROM DB2025_USER u WHERE u.user_id = r.user_id) as user_dep " +
                                     "FROM DB2025_RESERVATION r " +
-                                    "JOIN DB2025_ITEMS i ON r.item_id = i.item_id " +
-                                    "JOIN DB2025_USER u ON r.user_id = u.user_id " +
                                     "WHERE r.user_id = ?";
 
                     PreparedStatement getReservationsStmt = conn.prepareStatement(getReservationsSql);
