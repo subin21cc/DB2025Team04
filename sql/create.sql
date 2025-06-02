@@ -212,7 +212,7 @@ INSERT INTO DB2025_RESERVATION (user_id, item_id, reserve_date) VALUES
     -- processAutoTask 실행 시 대여신청으로 전환되어야 함
     (2025009, 3001, DATE_SUB(CURRENT_DATE, INTERVAL 5 DAY)),
     (2025001, 3004, DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY)),   -- 2025001: 회의용마이크 예약
-    (2025004, 3004, CURRENT_DATE),
+#     (2025004, 3004, CURRENT_DATE),
     -- [테스트 케이스 2] 대여불가 사용자(2025007)의 예약
     -- processAutoTask 실행 시 취소되어야 함
     (2025007, 3005, DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY));
