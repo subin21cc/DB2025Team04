@@ -10,26 +10,36 @@ import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.Vector;
 
+/*
+대여 물품 목록 패널 클래스
+- 검색, 대여/예약(사용자), 추가/수정/삭제(관리자) 기능 제공
+*/
 public class ItemListPanel extends JPanel {
-    private JTable itemTable;
-    private DefaultTableModel tableModel;
-    private JButton rentButton;
-    private JButton reservationButton;
-    private JTextField searchField;
-    private JComboBox<String> searchTypeCombo;
-    private boolean isSearching = false;
-    private JButton adminAddButton;
-    private JButton adminRemoveButton;
-    private JButton adminEditButton;
+    private JTable itemTable; // 물품 목록 테이블
+    private DefaultTableModel tableModel; // 테이블 데이터 모델
+    private JButton rentButton; // 대여 신청 버튼 (사용자)
+    private JButton reservationButton; // 예약 버튼 (사용자)
+    private JTextField searchField; // 검색어 입력 필드
+    private JComboBox<String> searchTypeCombo; // 검색 항목 선택 콤보박스
+    private boolean isSearching = false; // 검색 상태 여부
+    private JButton adminAddButton; // 물품 추가 버튼 (관리자)
+    private JButton adminRemoveButton; // 물품 삭제 버튼 (관리자)
+    private JButton adminEditButton; // 물품 수정 버튼 (관리자)
 
+    /*
+    패널 생성자. 레이아웃 설정 및 UI 초기화, 물품 목록 로드
+    */
     public ItemListPanel() {
         setLayout(new BorderLayout());
         initComponents();
         loadItemList(); // itemList는 항상 load해야 함
     }
 
+    /*
+    UI 컴포넌트(검색, 테이블, 버튼 등) 초기화 및 이벤트 리스너 등록
+    */
     private void initComponents() {
-        // Search panel
+        // 검색 패널 생성
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         searchField = new JTextField(20);
         searchTypeCombo = new JComboBox<>(new String[] {"분류", "물품이름"});
@@ -44,7 +54,7 @@ public class ItemListPanel extends JPanel {
         searchPanel.add(searchButton);
         searchPanel.add(resetButton);
 
-        // Table
+        // 물품 목록 테이블 및 모델 생성
         String[] columns = {"물품ID", "분류", "물품이름", "전체수량", "대여가능수량"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -57,17 +67,18 @@ public class ItemListPanel extends JPanel {
 
         JScrollPane scrollPane = new JScrollPane(itemTable);
 
+        // 테이블 행 선택 시 버튼 활성화/비활성화 처리
         itemTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {  // 이벤트가 조정 중이 아닐 때만 처리
                 int selectedRow = itemTable.getSelectedRow();
                 boolean hasSelection = selectedRow != -1;
                 
                 if (SessionManager.getInstance().isAdmin()) {
-                    // 관리자 모드일 경우
+                    // 관리자 모드: 수정/삭제 버튼 활성화
                     if (adminEditButton != null) adminEditButton.setEnabled(hasSelection);
                     if (adminRemoveButton != null) adminRemoveButton.setEnabled(hasSelection);
                 } else {
-                    // 일반 사용자 모드일 경우
+                    // 사용자 모드: 대여/예약 버튼 활성화 조건
                     if (hasSelection) {
                         // 선택된 행이 있는 경우
                         int availableQuantity = (int) tableModel.getValueAt(selectedRow, 4);
@@ -84,9 +95,10 @@ public class ItemListPanel extends JPanel {
             }
         });
 
+        // 버튼 패널 생성 및 권한별 버튼 배치
         JPanel buttonPanel = new JPanel();
         if (SessionManager.getInstance().isAdmin()) {
-            // 관리자 모드
+            // 관리자 모드: 추가/수정/삭제 버튼
             adminAddButton = new JButton("추가");
             adminEditButton = new JButton("수정");
             adminRemoveButton = new JButton("삭제");
@@ -100,6 +112,7 @@ public class ItemListPanel extends JPanel {
             buttonPanel.add(adminEditButton);
             buttonPanel.add(adminRemoveButton);
 
+            // 추가 버튼 클릭 시 다이얼로그 표시 및 DB 추가
             adminAddButton.addActionListener(e -> {
                 ItemDialog itemDialog = new ItemDialog(SwingUtilities.getWindowAncestor(this), "대여 물품 관리 - 추가");
                 itemDialog.setVisible(true);
@@ -110,6 +123,7 @@ public class ItemListPanel extends JPanel {
                 }
             });
 
+            // 수정 버튼 클릭 시 다이얼로그 표시 및 DB 수정
             adminEditButton.addActionListener(e -> {
                 int selectedRow = itemTable.getSelectedRow();
                 if (selectedRow != -1) {
@@ -137,6 +151,7 @@ public class ItemListPanel extends JPanel {
                 }
             });
 
+            // 삭제 버튼 클릭 시 확인 후 DB 삭제
             adminRemoveButton.addActionListener(e -> {
                 int selectedRow = itemTable.getSelectedRow();
                 if (selectedRow != -1) {
@@ -172,7 +187,7 @@ public class ItemListPanel extends JPanel {
                 }
             });
         } else {
-            // 일반 사용자 모드
+            // 사용자 모드: 대여/예약 버튼
             rentButton = new JButton("대여신청");
             reservationButton = new JButton("예약");
 
@@ -183,6 +198,7 @@ public class ItemListPanel extends JPanel {
             buttonPanel.add(rentButton);
             buttonPanel.add(reservationButton);
 
+            // 대여신청 버튼 클릭 시 대여 처리
             rentButton.addActionListener(e -> {
                 int selectedRow = itemTable.getSelectedRow();
                 if (selectedRow != -1) {
@@ -199,6 +215,7 @@ public class ItemListPanel extends JPanel {
                 }
             });
 
+            // 예약 버튼 클릭 시 예약 처리
             reservationButton.addActionListener(e -> {
                 int selectedRow = itemTable.getSelectedRow();
                 if (selectedRow != -1) {

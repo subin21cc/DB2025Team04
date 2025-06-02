@@ -10,15 +10,20 @@ import javax.swing.SpinnerNumberModel;
 
 import DB2025Team04.db.DatabaseManager;
 
+/*
+물품 추가/수정 다이얼로그 클래스
+물품의 분류, 이름, 전체수량, 대여가능수량을 입력받아 DB에 추가 또는 수정
+*/
 public class ItemDialog extends JDialog {
-    private JTextField categoryField;
-    private JTextField nameField;
-    private JSpinner totalQuantitySpinner;
-    private JSpinner availableQuantitySpinner;
-    private boolean isConfirmed = false;
+    private JTextField categoryField; // 분류 입력 필드
+    private JTextField nameField; // 이름 입력 필드
+    private JSpinner totalQuantitySpinner; // 전체수량 입력
+    private JSpinner availableQuantitySpinner; // 대여가능수량 입력
+    private boolean isConfirmed = false; // 확인 버튼 클릭 여부
     private int itemId = -1; // 새 필드: 수정 시 사용할 아이템 ID
     private boolean isEditMode = false; // 수정 모드 여부
 
+    // 신규 등록용 생성자
     public ItemDialog(Window parent, String title) {
         this(parent, title, -1, null, null, 1, 1);
     }
@@ -32,16 +37,16 @@ public class ItemDialog extends JDialog {
         this.itemId = itemId;
         this.isEditMode = (itemId > 0);
 
-        // 전체 레이아웃을 BorderLayout으로 설정
+        // 전체 레이아웃 설정
         setLayout(new BorderLayout());
 
-        // 메인 패널
+        // 메인 입력 패널
         JPanel mainPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // 분류
+        // 분류 입력
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 1;
@@ -53,7 +58,7 @@ public class ItemDialog extends JDialog {
         gbc.gridx = 1;
         mainPanel.add(categoryField, gbc);
 
-        // 이름
+        // 이름 입력
         gbc.gridy = 1;
         gbc.gridx = 0;
         mainPanel.add(new JLabel("이름"), gbc);
@@ -63,7 +68,7 @@ public class ItemDialog extends JDialog {
         gbc.gridx = 1;
         mainPanel.add(nameField, gbc);
 
-        // 전체수량
+        // 전체수량 입력
         gbc.gridy = 2;
         gbc.gridx = 0;
         mainPanel.add(new JLabel("전체수량"), gbc);
@@ -73,7 +78,7 @@ public class ItemDialog extends JDialog {
         gbc.gridx = 1;
         mainPanel.add(totalQuantitySpinner, gbc);
 
-        // 대여가능수량
+        // 대여가능수량 입력
         gbc.gridy = 3;
         gbc.gridx = 0;
         mainPanel.add(new JLabel("대여가능수량"), gbc);
@@ -99,7 +104,7 @@ public class ItemDialog extends JDialog {
             availableQuantitySpinner.setModel(availableModelUpdated);
         });
 
-        // 버튼 패널 - 맨 아래에 배치
+        // 버튼 패널 (확인/취소)
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
@@ -111,13 +116,15 @@ public class ItemDialog extends JDialog {
         // 확인 버튼을 기본 버튼으로 설정
         getRootPane().setDefaultButton(okButton);
 
-        // 확인 버튼 이벤트
+        // 확인 버튼 클릭 시 입력값 검증 및 DB 처리
         okButton.addActionListener(e -> {
             if (validateInputs()) {
                 boolean success;
                 if (isEditMode) {
+                    // 수정 모드 : DB 업데이트
                     success = updateItemInDatabase();
                 } else {
+                    // 신규 등록 모드 : DB에 새 물품 추가
                     success = addItemToDatabase();
                 }
 
@@ -132,15 +139,17 @@ public class ItemDialog extends JDialog {
         JButton cancelButton = new JButton("취소");
         buttonPanel.add(cancelButton);
 
+        // 취소 버튼 클릭 시 다이얼로그 닫기
         cancelButton.addActionListener(e -> {
             dispose();
         });
 
-        // 메인 패널은 중앙에, 버튼 패널은 아래쪽에 배치
+        // 메인 패널과 버튼 패널 배치
         add(mainPanel, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
+    // 입력값 검증 (빈칸, 수량 범위 등)
     private boolean validateInputs() {
         // 분류 확인
         if (categoryField.getText().trim().isEmpty()) {
@@ -169,7 +178,7 @@ public class ItemDialog extends JDialog {
         return true;
     }
 
-    // 수정 기능 추가
+    // DB에 물품 정보 수정
     private boolean updateItemInDatabase() {
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -206,6 +215,7 @@ public class ItemDialog extends JDialog {
         }
     }
 
+    // DB에 새 물품 추가
     private boolean addItemToDatabase() {
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -252,7 +262,4 @@ public class ItemDialog extends JDialog {
         }
     }
 
-    public boolean isConfirmed() {
-        return isConfirmed;
-    }
 }
