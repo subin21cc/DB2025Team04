@@ -262,4 +262,8 @@ public class ItemDialog extends JDialog {
         }
     }
 
+    // 다이얼로그가 확인되었는지 여부 반환
+    public boolean isConfirmed() {
+        return isConfirmed;
+    }
 }
