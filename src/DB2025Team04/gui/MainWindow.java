@@ -12,8 +12,15 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+/*
+메인 윈도우 클래스
+ - 로그인 후 사용자/관리자에 따라 탭을 다르게 구성
+ - 상단에 사용자 정보 및 로그아웃 버튼 표시
+ - 메뉴바에서 비밀번호 변경, 도움말, 새로고침 등 제공
+ */
 public class MainWindow extends JFrame {
-    private JTabbedPane tabbedPane;
+    private JTabbedPane tabbedPane; // 탭 패널
+    // 각 패널(탭) 선언
     private ItemListPanel itemListPanel;
     private MyRentStatusPanel myRentStatusPanel;
     private MyReservationPanel myReservationPanel;
@@ -23,6 +30,9 @@ public class MainWindow extends JFrame {
     private AdminUserPanel adminUserPanel;
     private AdminReservationPanel adminReservationPanel;
 
+    /*
+    생성자: 메인 윈도우 UI 초기화
+    */
     public MainWindow() {
         setTitle("이화 물품 대여 서비스");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -32,7 +42,11 @@ public class MainWindow extends JFrame {
         initComponents();
     }
 
+    /*
+    UI 컴포넌트 및 탭, 메뉴바 구성
+    */
     private void initComponents() {
+        // 상단 사용자 정보 및 로그아웃 버튼
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
 
@@ -42,6 +56,7 @@ public class MainWindow extends JFrame {
                         (SessionManager.getInstance().isAdmin() ? "관리자" : "일반 사용자") + ")");
         JButton logoutButton = new JButton("로그아웃");
         logoutButton.addActionListener(e -> {
+            // 로그아웃 시 세션 초기화 및 로그인 창으로 이동
             SessionManager.getInstance().clearSession();
             dispose();
             new LoginWindow().setVisible(true);
@@ -54,7 +69,9 @@ public class MainWindow extends JFrame {
 
         tabbedPane = new JTabbedPane();
 
+        // 관리자/일반 사용자에 따라 탭 구성 분기
         if (SessionManager.getInstance().isAdmin()) {
+            // 관리자용 탭 패널 생성 및 추가
             itemListPanel = new ItemListPanel();
             adminOutPanel = new AdminOutPanel();
             adminRentPanel = new AdminRentPanel();
@@ -67,7 +84,7 @@ public class MainWindow extends JFrame {
             tabbedPane.addTab("예약 현황", new ImageIcon(), adminReservationPanel, "예약 내역을 관리합니다.");
             tabbedPane.addTab("사용자 관리", new ImageIcon(), adminUserPanel, "사용자 정보를 관리합니다.");
 
-            // 탭 변경 이벤트 리스너 추가
+            // 탭 변경 시 각 패널의 데이터 갱신
             tabbedPane.addChangeListener(new ChangeListener() {
                 @Override
                 public void stateChanged(ChangeEvent e) {
@@ -90,6 +107,7 @@ public class MainWindow extends JFrame {
                 }
             });
         } else {
+            // 일반 사용자용 탭 패널 생성 및 추가
             itemListPanel = new ItemListPanel();
             myRentStatusPanel = new MyRentStatusPanel();
             myReservationPanel = new MyReservationPanel();
@@ -100,7 +118,7 @@ public class MainWindow extends JFrame {
             tabbedPane.addTab("내 예약 현황", new ImageIcon(), myReservationPanel, "나의 예약 현황을 보여줍니다");
             tabbedPane.addTab("내 연체 현황", new ImageIcon(), myOverduePanel, "내가 연체한 물품 및 현황을 보여줍니다");
 
-            // 일반 사용자 모드에서도 탭 변경 시 데이터를 갱신하는 리스너 추가
+            // 탭 변경 시 각 패널의 데이터 갱신
             tabbedPane.addChangeListener(new ChangeListener() {
                 @Override
                 public void stateChanged(ChangeEvent e) {
@@ -122,10 +140,14 @@ public class MainWindow extends JFrame {
         }
         add(tabbedPane, BorderLayout.CENTER);
 
+        // 메뉴바 생성 및 설정
         JMenuBar menuBar = createMenuBar();
         setJMenuBar(menuBar);
     }
 
+    /*
+    현재 선택된 탭의 데이터를 새로고침하는 메서드
+    */
     private void refreshCurrentTab() {
         int selectedIndex = tabbedPane.getSelectedIndex();
 
@@ -166,9 +188,14 @@ public class MainWindow extends JFrame {
         }
     }
 
+    /*
+    메뉴바 생성
+     - 내정보(비밀번호 변경), 도움말(대여/예약 안내, 대여 로그), 새로고침 메뉴 포함
+    */
     private JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
 
+        // 내정보 메뉴
         JMenu myInfo = new JMenu("내정보");
         JMenuItem editPwItem = new JMenuItem("비밀번호 변경");
         editPwItem.addActionListener(e -> {
@@ -188,10 +215,12 @@ public class MainWindow extends JFrame {
         });
         myInfo.add(editPwItem);
 
+        // 도움말 메뉴
         JMenu help = new JMenu("도움말");
         JMenuItem rentHelp = new JMenuItem("대여 안내");
         JMenuItem reserveHelp = new JMenuItem("예약 안내");
 
+        // 대여 안내 클릭 시 안내 메시지 표시
         rentHelp.addActionListener(e -> {
             JTextArea textArea = new JTextArea(15, 35);
             textArea.setText("대여 방법:\n" +
@@ -218,6 +247,7 @@ public class MainWindow extends JFrame {
             );
         });
 
+        // 예약 안내 클릭 시 안내 메시지 표시
         reserveHelp.addActionListener(e -> {
             JTextArea textArea = new JTextArea(15, 35);
             textArea.setText("예약 방법:\n" +
@@ -245,6 +275,7 @@ public class MainWindow extends JFrame {
         help.add(rentHelp);
         help.add(reserveHelp);
 
+        // 대여 로그 보기 메뉴
         JMenuItem viewLog = new JMenuItem("대여 로그 보기");
         viewLog.addActionListener(e -> {
             // 대여 로그를 보여주는 대화상자 생성 및 표시
@@ -253,11 +284,9 @@ public class MainWindow extends JFrame {
         });
         help.add(viewLog);
 
-
+        // 새로고침 메뉴
         JMenu refreshItem = new JMenu("새로고침");
         refreshItem.addActionListener(e -> refreshCurrentTab());
-
-
 
         menuBar.add(myInfo);
         menuBar.add(help);
@@ -266,12 +295,10 @@ public class MainWindow extends JFrame {
         return menuBar;
     }
 
-    /**
-     * 사용자 비밀번호를 변경하는 메서드
-     * @param userId 사용자 ID
-     * @param currentPassword 현재 비밀번호
-     * @param newPassword 새 비밀번호
-     */
+    // 사용자 비밀번호를 변경하는 메서드
+    // userId: 사용자 ID
+    // currentPassword: 현재 비밀번호
+    // newPassword: 새 비밀번호
     private void changePassword(int userId, String currentPassword, String newPassword) {
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -315,6 +342,7 @@ public class MainWindow extends JFrame {
                                          "오류", JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
         } finally {
+            // DB 연결 해제
             try {
                 if (rs != null) rs.close();
                 if (stmt != null) stmt.close();

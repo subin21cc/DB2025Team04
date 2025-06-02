@@ -265,6 +265,7 @@ public class ItemListPanel extends JPanel {
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
+    // 물품 목록을 DB에서 로드하여 테이블에 표시
     public void loadItemList() {
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -319,11 +320,13 @@ public class ItemListPanel extends JPanel {
         }
     }
 
+    // 검색 버튼 클릭 시 검색어에 따라 물품 목록 필터링
     private void searchItems() {
         isSearching = true;
         loadItemList();
     }
 
+    // 검색 초기화 버튼 클릭 시 검색 상태를 초기화하고 전체 목록 로드
     private void resetSearch() {
         isSearching = false;
         searchField.setText("");

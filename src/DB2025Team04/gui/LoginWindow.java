@@ -10,14 +10,22 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+/*
+로그인 창 클래스
+사용자가 아이디와 비밀번호를 입력하여 로그인할 수 있는 GUI를 제공
+일반 사용자와 관리자를 선택할 수 있는 라디오 버튼 포함
+*/
 public class LoginWindow extends JFrame {
-    private JTextField idField;
-    private JPasswordField passwordField;
-    private JRadioButton normalUserRadio;
-    private JRadioButton adminRadio;
-    
+    private JTextField idField; // 아이디 입력 필드
+    private JPasswordField passwordField; // 비밀번호 입력 필드
+    private JRadioButton normalUserRadio; // 일반 사용자 라디오 버튼
+    private JRadioButton adminRadio; // 관리자 라디오 버튼
+
+    /*
+    생성자: 로그인 창을 초기화하고 UI를 설정합니다.
+    */
     public LoginWindow() {
-        // Login을 할 때마다 자동 수행동작을 진행함
+        // 로그인 시 자동 처리 작업 실행 (예: 만료 처리 등)
         DatabaseManager.getInstance().processAutoTask();
 
         setTitle("로그인");
@@ -65,10 +73,6 @@ public class LoginWindow extends JFrame {
         passwordField = new JPasswordField(15);
         gbc.gridx = 1;
         mainPanel.add(passwordField, gbc);
-
-        // test를 위해서 id, password를 미리 설정
-//        idField.setText("2025001");
-//        passwordField.setText("pw1234");
         
         // 로그인 버튼
         JButton loginButton = new JButton("로그인");
@@ -77,7 +81,7 @@ public class LoginWindow extends JFrame {
         gbc.gridwidth = 2;
         mainPanel.add(loginButton, gbc);
 
-        // 로그인 버튼을 기본 버튼으로 설정
+        // 엔터키로 로그인 가능하도록 기본 버튼 지정
         getRootPane().setDefaultButton(loginButton);
 
         // 로그인 버튼 이벤트
@@ -85,8 +89,8 @@ public class LoginWindow extends JFrame {
             int userTypeIndex = adminRadio.isSelected() ? 1 : 0; // 관리자면 1, 일반 사용자면 0
             String id = idField.getText();
             String password = new String(passwordField.getPassword());
-            
-            // TODO: 여기에 로그인 검증 로직 추가
+
+            // 로그인 검증
             if (validateLogin(id, password, userTypeIndex)) {
                 int userId;
                 try {
@@ -95,6 +99,7 @@ public class LoginWindow extends JFrame {
                     userId = 0;
                 }
 
+                // 세션에 사용자 정보 저장
                 SessionManager.getInstance().setUserId(userId, userTypeIndex == 1);
                 dispose(); // 로그인 창 닫기
                 new MainWindow().setVisible(true); // 메인 창 열기
@@ -113,6 +118,7 @@ public class LoginWindow extends JFrame {
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.SOUTHEAST; // 우측 하단 정렬
         mainPanel.add(helpButton, gbc);
+        // 도움말 버튼 클릭 시 안내 메시지 표시
         helpButton.addActionListener(e -> {
             JTextArea textArea = new JTextArea(10, 30);
             textArea.setText("\n1. 아이디와 비밀번호를 입력하고 로그인 버튼을 클릭하세요.\n\n" +
@@ -126,38 +132,41 @@ public class LoginWindow extends JFrame {
 
         add(mainPanel);
     }
-    
+
+    /*
+    로그인 검증 메서드
+    - DB에서 아이디/비밀번호 일치 여부 확인
+    - 관리자 로그인 시 관리자 테이블 추가 확인
+    */
     private boolean validateLogin(String id, String password, int userTypeIndex) {
-        // TODO: 실제 데이터베이스 검증 로직 구현
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
 
         try {
             conn = DatabaseManager.getInstance().getConnection();
+            // 사용자 인증 쿼리 (비밀번호는 SHA-256 해시)
             String sql = "SELECT * FROM DB2025_USER WHERE user_id = ? AND user_pw = sha2(?, 256)";
             stmt = conn.prepareStatement(sql);
             stmt.setString(1, id);
             stmt.setString(2, password);
             rs = stmt.executeQuery();
             if (rs.next()) {
-                // 패스워드 확인 성공
+                // 사용자 인증 성공
                 String userName = rs.getString("user_name");
                 SessionManager.getInstance().setUserName(userName);
                 if (userTypeIndex == 1) {
-                    // 관리자 로그인 확인
+                    // 관리자 권한 확인
                     sql = "SELECT * FROM DB2025_ADMIN WHERE user_id = ?";
                     stmt = conn.prepareStatement(sql);
                     stmt.setString(1, id);
                     rs = stmt.executeQuery();
-                    if (rs.next()) {
-                        // 관리자 로그인 성공
-                    } else {
-                        // 관리자 로그인 실패
+                    if (!rs.next()) {
+                        // 관리자 권한 없음
                         JOptionPane.showMessageDialog(this,
-                            "관리자 권한이 필요합니다.",
-                            "오류",
-                            JOptionPane.ERROR_MESSAGE);
+                                "관리자 권한이 필요합니다.",
+                                "오류",
+                                JOptionPane.ERROR_MESSAGE);
                         return false;
                     }
                 }
@@ -174,6 +183,7 @@ public class LoginWindow extends JFrame {
             e.printStackTrace();
             return false;
         } finally {
+            // DB 연결 해제
             if (conn != null) {
                 try {
                     conn.close();
