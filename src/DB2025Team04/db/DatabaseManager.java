@@ -122,7 +122,7 @@ public class DatabaseManager {
             rs = stmt.executeQuery();
 
             if (!rs.next()) {
-                conn.rollback();
+                conn.rollback(); // 실패 시 롤백
                 return false; // 물품 또는 사용자 정보가 없음
             }
 
@@ -225,7 +225,7 @@ public class DatabaseManager {
             rs = stmt.executeQuery();
         
             if (!rs.next()) {
-                conn.rollback();
+                conn.rollback(); // 실패시 롤백
                 return false; // 해당 대여 정보가 없거나 이미 처리됨
             }
 
@@ -331,7 +331,7 @@ public class DatabaseManager {
             rs = stmt.executeQuery();
 
             if (!rs.next()) {
-                conn.rollback();
+                conn.rollback(); // 실패 시 롤백
                 return false; // 해당 대여 정보가 없음
             }
 
@@ -476,7 +476,7 @@ public class DatabaseManager {
             rs = stmt.executeQuery();
 
             if (!rs.next()) {
-                conn.rollback();
+                conn.rollback(); // 실패 시 롤백
                 return 4; // 물품 또는 사용자 정보가 없음
             }
 
@@ -489,7 +489,7 @@ public class DatabaseManager {
 
             // 1. 대여가능수량 확인
             if (availableQuantity > 0) {
-                conn.rollback();
+                conn.rollback(); // 실패 시 롤백
                 return 1; // 대여가능수량이 있는 경우 예약 불가
             }
 
@@ -503,7 +503,7 @@ public class DatabaseManager {
             rs = stmt.executeQuery();
 
             if (rs.next() && rs.getInt(1) > 0) {
-                conn.rollback();
+                conn.rollback(); // 실패 시 롤백
                 return 2; // 이미 예약한 내역이 있음
             }
 
@@ -516,7 +516,7 @@ public class DatabaseManager {
             rs = stmt.executeQuery();
 
             if (rs.next() && rs.getInt(1) > 0) {
-                conn.rollback();
+                conn.rollback(); // 실패 시 롤백
                 return 3; // 연체 중인 경우, 예약 불가
             }
 

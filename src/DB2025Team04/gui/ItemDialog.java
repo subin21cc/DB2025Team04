@@ -28,7 +28,7 @@ public class ItemDialog extends JDialog {
         super(parent, title, ModalityType.APPLICATION_MODAL);
         setSize(500, 300);
         setLocationRelativeTo(parent);
-        
+
         this.itemId = itemId;
         this.isEditMode = (itemId > 0);
 
@@ -83,18 +83,18 @@ public class ItemDialog extends JDialog {
         availableQuantitySpinner = new JSpinner(availableModel);
         gbc.gridx = 1;
         mainPanel.add(availableQuantitySpinner, gbc);
-        
+
         // 전체수량 변경 시 대여가능수량의 최대값도 변경
         totalQuantitySpinner.addChangeListener(e -> {
             int totalValue = (int) totalQuantitySpinner.getValue();
             int availableValue = (int) availableQuantitySpinner.getValue();
-            
+
             // 대여가능수량의 모델 업데이트
             SpinnerNumberModel availableModelUpdated = new SpinnerNumberModel(
-                Math.min(availableValue, totalValue), // 현재값과 전체수량 중 작은 값
-                0, // 최소값
-                totalValue, // 최대값은 전체수량
-                1 // 증가값
+                    Math.min(availableValue, totalValue), // 현재값과 전체수량 중 작은 값
+                    0, // 최소값
+                    totalValue, // 최대값은 전체수량
+                    1 // 증가값
             );
             availableQuantitySpinner.setModel(availableModelUpdated);
         });
@@ -114,18 +114,13 @@ public class ItemDialog extends JDialog {
         // 확인 버튼 이벤트
         okButton.addActionListener(e -> {
             if (validateInputs()) {
-                boolean success = false; // success 변수 초기화
-                try { // try-catch 블록 추가
-                    if (isEditMode) {
-                        success = updateItemInDatabase();
-                    } else {
-                        success = addItemToDatabase();
-                    }
-                } catch (SQLException ex) { // SQLException 처리
-                    JOptionPane.showMessageDialog(this, "데이터베이스 오류: " + ex.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
-                    ex.printStackTrace();
+                boolean success;
+                if (isEditMode) {
+                    success = updateItemInDatabase();
+                } else {
+                    success = addItemToDatabase();
                 }
-                
+
                 if (success) {
                     isConfirmed = true;
                     dispose();
@@ -164,7 +159,7 @@ public class ItemDialog extends JDialog {
         // 수량 확인
         int totalQuantity = (int) totalQuantitySpinner.getValue();
         int availableQuantity = (int) availableQuantitySpinner.getValue();
-        
+
         if (availableQuantity > totalQuantity) {
             JOptionPane.showMessageDialog(this, "대여가능수량은 전체수량보다 클 수 없습니다.", "입력 오류", JOptionPane.ERROR_MESSAGE);
             availableQuantitySpinner.requestFocus();
@@ -175,39 +170,34 @@ public class ItemDialog extends JDialog {
     }
 
     // 수정 기능 추가
-    private boolean updateItemInDatabase() throws SQLException {
+    private boolean updateItemInDatabase() {
         Connection conn = null;
         PreparedStatement stmt = null;
 
         try {
             conn = DatabaseManager.getInstance().getConnection();
-            conn.setAutoCommit(false); // 트랜잭션 시작
+
             // 아이템 수정
             String updateSql = "UPDATE DB2025_ITEMS SET item_name = ?, quantity = ?, available_quantity = ?, category = ? WHERE item_id = ?";
             stmt = conn.prepareStatement(updateSql);
-            
+
             stmt.setString(1, nameField.getText().trim());
             stmt.setInt(2, (int) totalQuantitySpinner.getValue());
             stmt.setInt(3, (int) availableQuantitySpinner.getValue());
             stmt.setString(4, categoryField.getText().trim());
             stmt.setInt(5, itemId);
-            
+
             int result = stmt.executeUpdate();
-            
+
             if (result > 0) {
-                conn.commit(); // 트랜잭션 커밋
                 JOptionPane.showMessageDialog(this, "물품이 성공적으로 수정되었습니다.", "수정 완료", JOptionPane.INFORMATION_MESSAGE);
                 return true;
             } else {
-                conn.rollback(); // 오류 발생 시 롤백
                 JOptionPane.showMessageDialog(this, "물품 수정에 실패했습니다.", "오류", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
 
         } catch (SQLException e) {
-            if (conn != null) {
-                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
-            }
             JOptionPane.showMessageDialog(this, "데이터베이스 오류: " + e.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
             return false;
@@ -223,18 +213,17 @@ public class ItemDialog extends JDialog {
 
         try {
             conn = DatabaseManager.getInstance().getConnection();
-            conn.setAutoCommit(false); // 트랜잭션 시작
 
             // 먼저 가장 큰 item_id 값을 조회하여 새 ID 생성
             String maxIdSql = "SELECT MAX(item_id) FROM DB2025_ITEMS";
             stmt = conn.prepareStatement(maxIdSql);
             rs = stmt.executeQuery();
-            
+
             int newItemId = 2001; // 기본 시작 ID
             if (rs.next() && rs.getObject(1) != null) {
                 newItemId = rs.getInt(1) + 1;
             }
-            
+
             // 새 아이템 추가
             String insertSql = "INSERT INTO DB2025_ITEMS (item_id, item_name, quantity, available_quantity, category) VALUES (?, ?, ?, ?, ?)";
             stmt = conn.prepareStatement(insertSql);
@@ -243,23 +232,18 @@ public class ItemDialog extends JDialog {
             stmt.setInt(3, (int) totalQuantitySpinner.getValue());
             stmt.setInt(4, (int) availableQuantitySpinner.getValue());
             stmt.setString(5, categoryField.getText().trim());
-            
+
             int result = stmt.executeUpdate();
-            
+
             if (result > 0) {
-                conn.commit(); // 트랜잭션 커밋
                 JOptionPane.showMessageDialog(this, "물품이 성공적으로 추가되었습니다.", "추가 완료", JOptionPane.INFORMATION_MESSAGE);
                 return true;
             } else {
-                conn.rollback(); // 오류 발생 시 롤백
                 JOptionPane.showMessageDialog(this, "물품 추가에 실패했습니다.", "오류", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
 
         } catch (SQLException e) {
-            if (conn != null) {
-                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
-            }
             JOptionPane.showMessageDialog(this, "데이터베이스 오류: " + e.getMessage(), "오류", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
             return false;
@@ -267,7 +251,7 @@ public class ItemDialog extends JDialog {
             DatabaseManager.getInstance().closeResources(conn, stmt, rs);
         }
     }
-    
+
     public boolean isConfirmed() {
         return isConfirmed;
     }
