@@ -1,20 +1,10 @@
--- MySQL 데이터베이스 생성
-CREATE DATABASE IF NOT EXISTS DB2025Team04
-    DEFAULT CHARACTER SET utf8mb4
-    DEFAULT COLLATE utf8mb4_unicode_ci;
-
--- MySQL 사용자 생성 및 권한 부여
-CREATE USER IF NOT EXISTS 'DB2025Team04'@'localhost' IDENTIFIED BY 'DB2025Team04';
-CREATE USER IF NOT EXISTS 'DB2025Team04'@'%' IDENTIFIED BY 'DB2025Team04';
-
--- 로컬 호스트에서 접속하는 사용자에게 모든 권한 부여
-GRANT ALL PRIVILEGES ON DB2025Team04.* TO 'DB2025Team04'@'localhost';
-
--- 원격 접속 사용자에게 모든 권한 부여
-GRANT ALL PRIVILEGES ON DB2025Team04.* TO 'DB2025Team04'@'%';
-
--- 권한 설정 적용
-FLUSH PRIVILEGES;
+-- DB2025Team04 데이터베이스 생성 스크립트
+DROP DATABASE IF EXISTS DB2025Team04;
+DROP USER IF EXISTS 'DB2025Team04'@'localhost';
+CREATE USER 'DB2025Team04'@'localhost' IDENTIFIED WITH mysql_native_password BY 'DB2025Team04';
+CREATE DATABASE DB2025Team04;
+GRANT ALL PRIVILEGES ON DB2025Team04.* TO 'DB2025Team04'@'localhost' WITH GRANT OPTION;
+COMMIT;
 
 -- 데이터베이스 사용 선언
 USE DB2025Team04;
@@ -198,9 +188,9 @@ INSERT INTO DB2025_ITEMS (item_id, item_name, quantity, available_quantity, cate
     (3003, '공학용계산기', 20, 15, '학습기기'),
     (3004, '회의용마이크', 8,  0, '음향기기'),
     (3005, '태블릿', 7, 5, '전자기기'),
-    (3006, '디지털카메라', 4, 1, '전자기기'),
+    (3006, '디지털카메라', 4, 0, '전자기기'),
     (3007, '볼펜', 3, 2, '필기구'),
-    (3008, '지우개', 2, 1, '필기구'),
+    (3008, '지우개', 1, 0, '필기구'),
     (3009, '컴퓨터사인펜', 12,  12, '필기구');
 
 -- 대여 데이터
@@ -208,14 +198,11 @@ INSERT INTO DB2025_ITEMS (item_id, item_name, quantity, available_quantity, cate
 
 -- 예약 데이터 삽입
 INSERT INTO DB2025_RESERVATION (user_id, item_id, reserve_date) VALUES
-    -- [테스트 케이스 1] 대여가능 수량이 있는 물품에 대한 예약
-    -- processAutoTask 실행 시 대여신청으로 전환되어야 함
-    (2025009, 3001, DATE_SUB(CURRENT_DATE, INTERVAL 5 DAY)),
-    (2025001, 3004, DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY)),   -- 2025001: 회의용마이크 예약
-#     (2025004, 3004, CURRENT_DATE),
-    -- [테스트 케이스 2] 대여불가 사용자(2025007)의 예약
-    -- processAutoTask 실행 시 취소되어야 함
-    (2025007, 3005, DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY));
+    (2025009, 3008, DATE_SUB(CURRENT_DATE, INTERVAL 5 DAY)),
+    -- [테스트 케이스 1] 연체된 사람에 대한 예약
+    -- processAutoTask 실행 시 예약 취소되어야 함
+    (2025001, 3004, DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY));   -- 2025001: 회의용마이크 예약
+
 
 -- 대여 데이터 삽입
 INSERT INTO DB2025_RENT (item_id, user_id, borrow_date, return_date, rent_status) VALUES
@@ -260,10 +247,11 @@ INSERT INTO DB2025_RENT (item_id, user_id, borrow_date, return_date, rent_status
   (3005, 2025006, DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), NULL, '연체중'),
   (3005, 2025007, DATE_SUB(CURRENT_DATE, INTERVAL 15 DAY), DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), '반납완료'),
 
-  -- 디지털카메라(3006): 총 4개, 가용 1개 -> 2개 대여중, 1개 연체중
+  -- 디지털카메라(3006): 총 4개, 가용 0개 -> 3개 대여중, 1개 연체중
   (3006, 2025008, DATE_SUB(CURRENT_DATE, INTERVAL 5 DAY), NULL, '대여중'),
   (3006, 2025009, DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY), NULL, '대여중'),
   (3006, 2025010, DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), NULL, '연체중'),
+  (3006, 2025007, DATE_SUB(CURRENT_DATE, INTERVAL 4 DAY), NULL, '대여중'),
 
   -- 볼펜(3007): 총 3개, 가용 2개 -> 1개 대여중
   (3007, 2025002, DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), NULL, '대여중'),
