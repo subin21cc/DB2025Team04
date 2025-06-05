@@ -47,6 +47,7 @@ public class MyRentStatusPanel extends JPanel {
         try {
             conn = DatabaseManager.getInstance().getConnection();
 
+            // DB2025_VIEW_USER_RENT_STATUS 뷰를 사용
             // 대여 현황 조회 쿼리
             String sql = "SELECT rent_id, item_id, category, item_name, borrow_date, return_date, rent_status " +
                     "FROM DB2025_VIEW_USER_RENT_STATUS " +
